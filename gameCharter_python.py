@@ -122,7 +122,7 @@ def main():
                     
                     BIP_result = input("What was the Ball-in-Play result: ") if pitch_result == "BIP" else "0"
                     
-                    if BIP_result not in ("GO","FO","LO","1B","2B","3B","HR","E","SB","DB","0"):
+                    if BIP_result not in ("GO","FO","LO","1B","2B","3B","HR","E","SB","DP","0"):
                         print("Invalid Ball in Play Entry.")
                         continue #jump back to the start of the loop
 
@@ -168,6 +168,7 @@ def main():
                             balls = 0
                             strikes = 0
                             outs += 1
+                            batter_in_inning += 1
                             lineup_pos += 1
                             if lineup_pos == len(oppo_lineup):
                                 lineup_pos = 0

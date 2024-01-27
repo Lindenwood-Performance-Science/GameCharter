@@ -179,7 +179,7 @@ def insert_pitches_per_inning(cursora,new_sheetb,ending,row_i,col_i,exe):
         if (trip):
             row_i=k
         innings= int(outs)/3 if outs is not None else 0
-        ti+=innings ################################################### Problem Here
+        ti+=innings 
         count_a=int(pitchCount) if pitchCount is not None else 0
         if (innings!=0):
             put_in = count_a/innings

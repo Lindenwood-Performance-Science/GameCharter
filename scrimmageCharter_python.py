@@ -56,7 +56,7 @@ def main():
             connection.commit()
 
             date = input("Enter today's date (PUT IT IN MM-DD-YYYY form): ")
-            opponent = "scrimmage"
+            opponent = "Scrimmage"
             
             home_lineup= [int(x) for x in input("Enter the home team's lineup in number form with spaces between: ").split()]
             
@@ -105,8 +105,9 @@ def main():
                             outs = int(input("Enter the amount of outs there are: "))
                             if outs >= 3:
                                 outs = 0
-                                inning += 1
+                                inning[counter%2] += 1
                                 batter_in_inning = 1
+                                counter+=1
                         elif change.lower() == "count":
                             balls, strikes = map(int, input("Enter the balls and strikes separated by a space: ").split())
                         elif change.lower() == "batter":
@@ -131,7 +132,7 @@ def main():
                     
                     BIP_result = input("What was the Ball-in-Play result: ") if pitch_result == "BIP" else "0"
                     
-                    if BIP_result not in ("GO","FO","LO","1B","2B","3B","HR","E","SB","DB","0"):
+                    if BIP_result not in ("GO","FO","LO","1B","2B","3B","HR","E","SB","DP","0"):
                         print("Invalid Ball in Play Entry.")
                         continue #jump back to the start of the loop
 
@@ -177,6 +178,7 @@ def main():
                             balls = 0
                             strikes = 0
                             outs += 1
+                            batter_in_inning += 1
                             lineup_pos[counter%2] += 1
                             if lineup_pos[counter%2] == len(oppo_lineup[counter%2]):
                                 lineup_pos[counter%2] = 0
