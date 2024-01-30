@@ -93,7 +93,9 @@ def main():
                             pitch_count = 1
                             outs_accrued = 0
                         elif change.lower() == "outs":
+                            prevOuts=outs
                             outs = int(input("Enter the amount of outs there are: "))
+                            outs_accrued+=(outs-prevOuts)
                             if outs >= 3:
                                 outs = 0
                                 inning += 1

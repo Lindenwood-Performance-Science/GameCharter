@@ -12,10 +12,10 @@ import os
 
 ##globals
 header_pos=['A2','B2','C2','D2','E2','F2','G2','H2','I2','J2','K2','L2','M2','N2','O2','P2','Q2','R2','S2','T2','U2','V2','W2','X2']
-pitch_headersa=['Date','Opponent','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P %']
+pitch_headersa=['Date','Opponent','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)']
 pitcher_headersb=['LO % (65)','Overall Strike % (60)','BAA w/ 2K (.150)','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','BAA BIP','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %']
 pitcher_headers=pitch_headersa+pitcher_headersb
-season_game_headersa=['Name','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P %']
+season_game_headersa=['Name','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)']
 season_game_headersb=['LO % (65)','Overall Strike % (60)','BAA w/ 2K (.150)','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','BAA BIP','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %' ]
 season_game_headers=season_game_headersa+season_game_headersb
 
@@ -227,7 +227,7 @@ def insert_1st_pitch_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe
         put_in = int(percentage) if percentage is not None else 0
         cella = new_sheetb.cell(row=row_i, column=col_i, value=put_in)
         
-        if put_in > goodNum:
+        if put_in >= goodNum:
             cella.font = Font(bold=True)
             
 def insert_off_speed_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
@@ -248,7 +248,7 @@ def insert_off_speed_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe
         put_in = int(percentageOFF) if percentageOFF is not None else 0
         cella = new_sheetb.cell(row=row_i, column=col_i, value=put_in)
         
-        if put_in > goodNum:
+        if put_in >= goodNum:
             cella.font = Font(bold=True)
             
 def insert_swing_and_miss_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
@@ -269,7 +269,7 @@ def insert_swing_and_miss_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,g
         put_in = int(misses) if misses is not None else 0
         cella = new_sheetb.cell(row=row_i, column=col_i, value=put_in)
          
-        if put_in > goodNum:
+        if put_in >= goodNum:
             cella.font = Font(bold=True)
     
 def insert_velo_range(cursora,new_sheetb,ending,row_i,col_i,exe,trigger1,trigger2, trigger3):
@@ -316,7 +316,7 @@ def insert_chases(cursora,new_sheetb,ending,row_i,col_i,exe):
         cella=new_sheetb.cell(row=row_i, column=col_i, value=put_in)
 
         innings= int(ip) if ip is not None else 0
-    if put_in > innings:
+    if put_in >= innings:
         cella.font = Font(bold=True)
 
 def insert_ahead_after_3_pitches_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
@@ -337,7 +337,7 @@ def insert_ahead_after_3_pitches_percentage(cursora,new_sheetb,ending,row_i,col_
         put_in = int(aa3p) if aa3p is not None else 0
         cella = new_sheetb.cell(row=row_i, column=col_i, value=put_in)
  
-        if put_in > goodNum:
+        if put_in >= goodNum:
             cella.font = Font(bold=True)   
             
 def insert_lead_off_out_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
@@ -357,7 +357,7 @@ def insert_lead_off_out_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goo
         put_in = int(loo) if loo is not None else 0
         cella=new_sheetb.cell(row=row_i, column=col_i, value=put_in)
         
-        if put_in > goodNum:
+        if put_in >= goodNum:
             cella.font = Font(bold=True)
 
 def insert_overall_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
@@ -378,7 +378,7 @@ def insert_overall_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,g
         put_in = int(oveper) if oveper is not None else 0
         cella = new_sheetb.cell(row=row_i, column=col_i, value=put_in)
         
-        if put_in > goodNum:
+        if put_in >= goodNum:
             cella.font = Font(bold=True)
 
 def insert_baa_with_2_strikes(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
