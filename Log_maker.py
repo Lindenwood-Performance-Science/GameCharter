@@ -384,7 +384,7 @@ def insert_overall_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,g
 def insert_baa_with_2_strikes(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
     ##### Opponent Batting Average with 2 Strikes
     query="SELECT CASE WHEN COUNT(CASE WHEN strikes = 2 AND ab_result <> '0' and (pitch_result <> 'B' or pitch_result <> 'HBP') THEN 1 END) > 0 "
-    query+="THEN (COUNT(CASE WHEN strikes = 2 AND ab_result = 'out'  THEN 1 END) * 1.0 / "
+    query+="THEN (COUNT(CASE WHEN strikes = 2 AND ab_result = 'safe' and bip_result <> '0'  THEN 1 END) * 1.0 / "
     query+="COUNT(CASE WHEN strikes = 2 AND ab_result <> '0' and (pitch_result <> 'B' or pitch_result <> 'HBP') THEN 1 END)) ELSE 0 END AS BAAw2K FROM pitch_log_t "
     query+= ending
     cursora.execute(query,exe)
