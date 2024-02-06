@@ -88,8 +88,12 @@ def main():
                 print(f"Inning: {inning[counter%2]}   Pitcher: {fname[counter%2]} {lname[counter%2]}   Outs: {outs}   Count: {balls}-{strikes}  Batter #{oppo_lineup[counter%2][lineup_pos[counter%2]]}")
                 
                 user_input=input(">>> ")
-    
-                if user_input.lower() == "stop":
+                input_list=user_input.split()
+                
+                if len(input_list) not in (1,3):
+                    print ("Invalid Entry. ENTER PITCH TYPE, VELOCITY, PITCH RESULT")
+                
+                elif user_input.lower() == "stop":
                     yes_no = input("Do you wish to stop charting? Y/N: ")
                     if yes_no.upper() == "Y":
                         go = False
@@ -114,6 +118,44 @@ def main():
                             balls, strikes = map(int, input("Enter the balls and strikes separated by a space: ").split())
                         elif change.lower() == "batter":
                             oppo_lineup[counter%2][lineup_pos[counter%2]] = int(input("Enter the number of the current batter: "))
+
+                elif user_input.lower() == "undo":
+                    prev_pitch_id=get_max_pitch_id(cursor)-1
+                    prev_pitch_entry = "SELECT fname,lname,inning,outs,balls,strikes,outs_accrued,pitch_count,batter_of_inning,batter_number,pitch_id,ab_result,bip_result FROM pitch_log_T WHERE pitch_id=%s;"
+                    cursor.execute(prev_pitch_entry,(prev_pitch_id,))
+                    data = cursor.fetchone()
+                    
+                    if data[11]=="out" and outs==0:
+                        counter-=1
+                    
+                    fname[counter%2]=data[0]
+                    lname[counter%2]=data[1]
+                    inning[counter%2]=data[2]
+                    outs=data[3]
+                    balls=data[4]
+                    strikes=data[5]
+                    outs_accrued[counter%2]=data[6]
+                    pitch_count[counter%2]=data[7]
+                    batter_in_inning=data[8]
+                    batter_number=data[9]
+                    pitch_id=data[10]
+                    
+                    if data[11]=="out":
+                        outs_accrued[counter%2]-=1
+                        if data[12]=="DP":
+                            outs_accrued[counter%2]-=1
+                    
+                    if oppo_lineup[counter%2][lineup_pos[counter%2]]!=batter_number:
+                        lineup_pos[counter%2]-=1
+                        if lineup_pos[counter%2]==-1:
+                            lineup_pos[counter%2]=len(oppo_lineup[counter%2])-1
+                        
+                    delete_statment = "DELETE FROM pitch_log_T WHERE pitch_id = %s;"
+                    cursor.execute(delete_statment,(prev_pitch_id,))
+                    print ("Previous Pitch Erased")
+
+                elif len(input_list)!=3:
+                    print ("Invalid Entry. ENTER PITCH TYPE, VELOCITY, PITCH RESULT")
 
                 else:
                     pitch_type, velo, pitch_result = user_input.split()
@@ -223,6 +265,8 @@ def main():
                             inning[counter%2] += 1
                             batter_in_inning = 1
                             counter+=1
+                            strikes=0
+                            balls=0
                             
                             
                     if BIP_result=="1B" or BIP_result=="2B" or BIP_result=="3B" or BIP_result=="HR" or BIP_result=="E":

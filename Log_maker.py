@@ -316,8 +316,8 @@ def insert_chases(cursora,new_sheetb,ending,row_i,col_i,exe):
         cella=new_sheetb.cell(row=row_i, column=col_i, value=put_in)
 
         innings= int(ip) if ip is not None else 0
-    if put_in >= innings:
-        cella.font = Font(bold=True)
+        if put_in >= innings:
+            cella.font = Font(bold=True)
 
 def insert_ahead_after_3_pitches_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
     ##### Ahead After 3 Pitches Percentage
@@ -383,9 +383,9 @@ def insert_overall_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,g
 
 def insert_baa_with_2_strikes(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
     ##### Opponent Batting Average with 2 Strikes
-    query="SELECT CASE WHEN COUNT(CASE WHEN strikes = 2 AND ab_result <> '0' and (pitch_result <> 'B' or pitch_result <> 'HBP') THEN 1 END) > 0 "
-    query+="THEN (COUNT(CASE WHEN strikes = 2 AND ab_result = 'safe' and bip_result <> '0'  THEN 1 END) * 1.0 / "
-    query+="COUNT(CASE WHEN strikes = 2 AND ab_result <> '0' and (pitch_result <> 'B' or pitch_result <> 'HBP') THEN 1 END)) ELSE 0 END AS BAAw2K FROM pitch_log_t "
+    query="SELECT CASE WHEN COUNT(CASE WHEN strikes = 2 AND ab_result <> '0' and (pitch_result <> 'B' and pitch_result <> 'HBP') THEN 1 END) > 0 "
+    query+="THEN (COUNT(CASE WHEN strikes = 2 AND ab_result = 'safe' and bip_result In ('1B','2B','3B','HR') and bip_result <> 'E' THEN 1 END) * 1.0 / "
+    query+="COUNT(CASE WHEN strikes = 2 AND ab_result <> '0' and (pitch_result <> 'B' and pitch_result <> 'HBP') THEN 1 END)) ELSE 0 END AS BAAw2K FROM pitch_log_t "
     query+= ending
     cursora.execute(query,exe)
     data=cursora.fetchall()
