@@ -137,6 +137,7 @@ def main():
                         
                     delete_statment = "DELETE FROM pitch_log_T WHERE pitch_id = %s;"
                     cursor.execute(delete_statment,(prev_pitch_id,))
+                    connection.commit()
                     print ("Previous Pitch Erased")
 
                 elif len(input_list)!=3:

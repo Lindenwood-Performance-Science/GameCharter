@@ -321,9 +321,9 @@ def insert_chases(cursora,new_sheetb,ending,row_i,col_i,exe):
 
 def insert_ahead_after_3_pitches_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
     ##### Ahead After 3 Pitches Percentage
-    query = "SELECT CASE WHEN COUNT(CASE WHEN (balls=1 AND strikes=2) or (balls=2 AND strikes=1) or (balls=0 AND strikes=2 AND pitch_result<>'B' AND pitch_result <> 'F') or (balls=2 AND strikes=0 AND (pitch_result='B' or pitch_result='BIP' or pitch_result='HBP'))THEN 1 END) > 0 "
-    query+="THEN (COUNT(CASE WHEN (balls=2 AND strikes=1) or (balls=0 AND strikes=2 AND pitch_result<>'B' AND pitch_result <> 'F') THEN 1 END) * 100.0 / "
-    query+="COUNT(CASE WHEN (balls=1 AND strikes=2) or (balls=2 AND strikes=1) or (balls=0 AND strikes=2 AND pitch_result<>'B' AND pitch_result <> 'F') or (balls=2 AND strikes=0 AND (pitch_result='B' or pitch_result='BIP' or pitch_result='HBP')) THEN 1 END)) ELSE 0 END AS AA3P FROM pitch_log_t "
+    query = "SELECT CASE WHEN COUNT(CASE WHEN (balls=1 AND strikes=2) or (balls=2 AND strikes=1) or (balls=0 AND strikes=2 AND pitch_result Not IN ('B','F')) or (balls=2 AND strikes=0 AND pitch_result IN ('B','HBP','BIP'))THEN 1 END) > 0 "
+    query+="THEN (COUNT(CASE WHEN (balls=1 AND strikes=2) or (balls=0 AND strikes=2 AND pitch_result Not IN ('B','F')) THEN 1 END) * 100.0 / "
+    query+="COUNT(CASE WHEN (balls=1 AND strikes=2) or (balls=2 AND strikes=1) or (balls=0 AND strikes=2 AND pitch_result Not IN ('B','F','HBP')) or (balls=2 AND strikes=0 AND pitch_result IN ('B','HBP','BIP'))THEN 1 END)) ELSE 0 END AS AA3P FROM pitch_log_t "
     query+=ending
     cursora.execute(query,exe)
     data=cursora.fetchall()
@@ -961,10 +961,10 @@ def up_game_log(cursor,updated_date,file_name):
             
             for j, (datea,oppo) in enumerate(data,3):
                 
-                datea =datea[0] if isinstance(datea, tuple) and datea else datea
-                oppo=oppo[0] if isinstance(oppo, tuple) and oppo else oppo
-                
+                datea = str(datea) if datea is not None else ""
+                oppo = str(oppo) if oppo is not None else ""
                 exea=(datea,oppo)
+                
                 iplEndStatement="WHERE date = %s AND opponent = %s AND pitch_id <> '0'  GROUP BY fname,lname ORDER BY fname,lname "
                 
 
@@ -973,9 +973,8 @@ def up_game_log(cursor,updated_date,file_name):
                 new_sheet=setup(sheetname,workbook,"Date",datea,"Opponent",oppo,"Updated Date",updated_date,header_pos,season_game_headers)
                 
                 
-                        
                 insert_names(cursor,new_sheet,iplEndStatement,0,1,exea)
-        
+                
                 total_pitch_count=insert_pitches_thrown(cursor, new_sheet, iplEndStatement, 0, 2, exea)
                 
                 total_innings=insert_pitches_per_inning(cursor, new_sheet, iplEndStatement, 0, 3, exea)
