@@ -2,7 +2,7 @@
 """
 Created on Sun Dec  3 18:46:57 2023
 
-@author: benne
+@author: Bennett Stice
 """
 
 import psycopg2

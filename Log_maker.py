@@ -11,12 +11,12 @@ from openpyxl.styles import PatternFill
 import os
 
 ##globals
-header_pos=['A2','B2','C2','D2','E2','F2','G2','H2','I2','J2','K2','L2','M2','N2','O2','P2','Q2','R2','S2','T2','U2','V2','W2','X2']
-pitch_headersa=['Date','Opponent','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)']
-pitcher_headersb=['LO % (65)','Overall Strike % (60)','BAA w/ 2K (.150)','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','BAA BIP','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %']
+header_pos=['A2','B2','C2','D2','E2','F2','G2','H2','I2','J2','K2','L2','M2','N2','O2','P2','Q2','R2','S2','T2','U2','V2','W2','X2','Y2','Z2','AA2','AB2']
+pitch_headersa=['Date','Opponent','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)','OPP SLG % (.400)']
+pitcher_headersb=['LO % (65)','Overall Strike % (60)','BAA w/ 2K (.150)','Freebases','Strikeouts','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','BAA BIP','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %','Pitch Spread Hit %']
 pitcher_headers=pitch_headersa+pitcher_headersb
-season_game_headersa=['Name','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)']
-season_game_headersb=['LO % (65)','Overall Strike % (60)','BAA w/ 2K (.150)','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','BAA BIP','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %' ]
+season_game_headersa=['Name','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)','OPP SLG % (.400)']
+season_game_headersb=['LO % (65)','Overall Strike % (60)','BAA w/ 2K (.150)','Freebases','Strikeouts','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','BAA BIP','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %','Pitch Spread Hit %' ]
 season_game_headers=season_game_headersa+season_game_headersb
 
 
@@ -27,6 +27,11 @@ def insert_header(pos,name,sheetName):
     sheetName[pos]=name
     bold_font = Font(bold=True)
     sheetName[pos].font = bold_font
+    
+def insert_secondary_header(row_i, col_i, name, sheetName):
+    sheetName.cell(row=row_i, column=col_i, value=name)
+    bold_font = Font(bold=True)
+    sheetName.cell(row=row_i, column=col_i).font = bold_font
     
 def wipe(workbooka):
     # Delete all sheets except the active one
@@ -39,6 +44,7 @@ def wipe(workbooka):
 def create_workbook(file_nameb):
     # Specify the path to the file
     file_path = os.path.join(os.path.expanduser("~"), "OneDrive", "Documents", "Lindenwood Performance Science", "gameCharter", file_nameb)
+#   file_path = os.path.join(os.path.expanduser("~"),"LUPS",file_nameb)    
 
     # Check if the file exists
     if os.path.exists(file_path):
@@ -155,7 +161,7 @@ def insert_pitches_thrown(cursorb,new_sheetb,ending,row_i,column_i,exe):
     trip=False
     if (row_i==0):
         trip=True
-    tpc=0 ########################################################################### Problem Here for pitcher logs
+    tpc=0 
     for k, (pitchCount,) in enumerate(data, 3):
         if (trip):
             row_i=k
@@ -316,7 +322,7 @@ def insert_chases(cursora,new_sheetb,ending,row_i,col_i,exe):
         cella=new_sheetb.cell(row=row_i, column=col_i, value=put_in)
 
         innings= int(ip) if ip is not None else 0
-        if put_in >= innings:
+        if put_in >= innings and put_in !=0:
             cella.font = Font(bold=True)
 
 def insert_ahead_after_3_pitches_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
@@ -339,6 +345,38 @@ def insert_ahead_after_3_pitches_percentage(cursora,new_sheetb,ending,row_i,col_
  
         if put_in >= goodNum:
             cella.font = Font(bold=True)   
+            
+def insert_opponent_slugging_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
+    query = "SELECT  COUNT(CASE WHEN bip_result='1B' THEN 1 END) AS Singles , "
+    query += "COUNT(CASE WHEN bip_result='2B' THEN 1 END) AS Doubles, "
+    query += "COUNT(CASE WHEN bip_result='3B' THEN 1 END) AS Triples, "
+    query += "COUNT(CASE WHEN bip_result='HR' THEN 1 END) AS Homeruns, "
+    query += "COUNT(CASE WHEN ab_result<>'0' AND pitch_result NOT IN ('B','HBP') THEN 1 END) AS At_Bats "
+    query += "FROM pitch_log_T "
+    query += ending
+    
+    cursora.execute(query,exe)
+    data=cursora.fetchall()
+    trip=False
+    if (row_i==0):
+        trip=True
+    
+    for k, (Singles,Doubles,Triples,Homeruns,At_Bats) in enumerate(data,3):
+        if (trip):
+            row_i=k
+        Singles_Val=int(Singles)*1.0 if Singles is not None else 0
+        Doubles_Val=int(Doubles)*2.0 if Doubles is not None else 0
+        Triples_Val=int(Triples)*3.0 if Triples is not None else 0
+        Homeruns_Val=int(Homeruns)*4.0 if Homeruns is not None else 0
+        At_Bats=int(At_Bats) if At_Bats is not None else 0
+        if At_Bats!=0:
+            put_in=round((Singles_Val+Doubles_Val+Triples_Val+Homeruns_Val)/At_Bats,3)
+        else:
+            put_in=0
+        cella=new_sheetb.cell(row=row_i, column=col_i, value=put_in)  
+        
+        if put_in <= goodNum:
+            cella.font = Font(bold=True)
             
 def insert_lead_off_out_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
     ##### Lead Off Out Percentage
@@ -402,6 +440,40 @@ def insert_baa_with_2_strikes(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum)
         if put_in <=goodNum:
             cella.font = Font(bold=True)
             
+def insert_freebases_count(cursora,new_sheetb,ending,row_i,col_i,exe):
+    ###### Count of Walks and Hit by Pitches
+    query = "SELECT COUNT(CASE WHEN (balls=3 AND pitch_result = 'B') or pitch_result = 'HBP' THEN 1 END) AS freebies "
+    query += "FROM pitch_log_T "
+    query += ending
+    cursora.execute(query,exe)
+    data=cursora.fetchall()
+    trip=False
+    if (row_i==0):
+        trip=True
+    
+    for k, (freebies,) in enumerate(data,3):
+        if (trip):
+            row_i=k
+        put_in = freebies if freebies is not None else 0
+        new_sheetb.cell(row=row_i, column=col_i, value=put_in)
+            
+def insert_strikeout_count(cursora,new_sheetb,ending,row_i,col_i,exe):
+    ###### Count of Strikeouts
+    query = "SELECT COUNT(CASE WHEN strikes = 2 AND pitch_result IN ('SL','SS','SSC','D3SS') THEN 1 END) AS Ks "
+    query += "FROM pitch_log_T "
+    query += ending
+    cursora.execute(query,exe)
+    data=cursora.fetchall()
+    trip=False
+    if (row_i==0):
+        trip=True
+    
+    for k, (Ks,) in enumerate(data,3):
+        if (trip):
+            row_i=k
+        put_in = Ks if Ks is not None else 0
+        new_sheetb.cell(row=row_i, column=col_i, value=put_in)
+        
 def insert_advantage_counts_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     ##### Percentage of Pitches Thrown in Advantage Counts
     query = "SELECT CASE WHEN COUNT(CASE WHEN pitch_result <>'0' THEN 1 END) > 0 "
@@ -643,6 +715,80 @@ def insert_pitch_spread_whiff_percentage(cursora,new_sheetb,ending,row_i,col_i,e
         put_in = f"{FBP}-{CBP}-{SLP}-{CHP}-{SPP}-{CUP}"
         new_sheetb.cell(row=row_i, column=col_i, value=put_in)
         
+def insert_pitch_spread_hits_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
+    ##### Fastball - Curveball - Slider - Change UP - Splitter Spread Hit Percentage
+    query = "SELECT "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS FBP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS CBP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SL' AND bip_result in ('1B','2B','3B','HR') AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'SL' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS SLP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CH' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CH' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS CHP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SP' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'SP' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS SPP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CU' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CU' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS CUP "
+    query += "FROM pitch_log_t "
+    query +=ending
+    
+    cursora.execute(query,exe)
+    data=cursora.fetchall()
+    trip=False
+    if (row_i==0):
+        trip=True
+        
+    for k,(FBP,CBP,SLP,CHP,SPP,CUP) in enumerate(data,3):
+        if (trip):
+            row_i=k
+        FBP=int(FBP) if FBP is not None else 0
+        CBP=int(CBP) if CBP is not None else 0
+        SLP=int(SLP) if SLP is not None else 0
+        CHP=int(CHP) if CHP is not None else 0
+        SPP=int(SPP) if SPP is not None else 0
+        CUP=int(CUP) if CUP is not None else 0  
+                
+        put_in = f"{FBP}-{CBP}-{SLP}-{CHP}-{SPP}-{CUP}"
+        new_sheetb.cell(row=row_i, column=col_i, value=put_in)
+               
+def insert_what_got_hit(cursora,new_sheetb,start_row,dateb):
+    
+    insert_secondary_header(start_row-2,1,"PITCHES THAT GOT HIT",new_sheetb)
+    insert_secondary_header(start_row-1,1,"Name",new_sheetb)
+    insert_secondary_header(start_row-1,2,"Pitch Type",new_sheetb)
+    insert_secondary_header(start_row-1,3,"Velo",new_sheetb)
+    insert_secondary_header(start_row-1,4,"Count",new_sheetb)
+    insert_secondary_header(start_row-1,5,"BIP Result",new_sheetb)
+    insert_secondary_header(start_row-1,6,"Batter Number",new_sheetb)
+    
+    
+    query = "SELECT fname, lname, pitch_type,velocity,balls,strikes,bip_result,batter_number "
+    query += "FROM pitch_log_T WHERE bip_result in ('1B','2B','3B','HR') and date = %s "
+    query += "Order By fname,lname ASC"
+    cursora.execute(query,(dateb,))
+    data=cursora.fetchall()
+    
+    for k,(fname,lname,pitch_type,velocity,balls,strikes,bip_result,batter_number) in enumerate(data,start_row):
+        put_in=f"{fname} {lname}"
+        new_sheetb.cell(row=k,column=1,value=put_in)
+        
+        put_in= pitch_type
+        new_sheetb.cell(row=k,column=2,value=put_in)
+        
+        put_in= int(velocity)
+        new_sheetb.cell(row=k,column=3,value=put_in)
+        
+        put_in= f"{balls} - {strikes}"
+        new_sheetb.cell(row=k,column=4,value=put_in)
+        
+        put_in= f"{bip_result}"
+        new_sheetb.cell(row=k,column=5,value=put_in)
+        
+        put_in= f"#{batter_number}"
+        new_sheetb.cell(row=k,column=6,value=put_in)
+        
+        
 
 #updates pitchers logs
 def up_pitchers_log(cursor,update_date,file_name):
@@ -705,31 +851,39 @@ def up_pitchers_log(cursor,update_date,file_name):
                    
                    insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,j,11,exea,60)
                    
-                   insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, j, 12, exea, 65)
+                   insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, j, 12, exea, .4)
                    
-                   insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, j, 13, exea, 60)
+                   insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, j, 13, exea, 65)
                    
-                   insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, j, 14, exea, 0.15)
+                   insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, j, 14, exea, 60)
                    
-                   insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, j, 15, exea)
+                   insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, j, 15, exea, 0.15)
                    
-                   insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, j, 16, exea)
+                   insert_freebases_count(cursor, new_sheet, iplEndStatement, j, 16, exea)
+                   
+                   insert_strikeout_count(cursor, new_sheet, iplEndStatement, j, 17, exea)
+                           
+                   insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, j, 18, exea)
+                   
+                   insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, j, 19, exea)
                                       
-                   insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, j, 17, exea)
+                   insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, j, 20, exea)
                    
-                   insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, j, 18, exea)
+                   insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, j, 21, exea)
                    
-                   insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, j, 19, exea)
+                   insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, j, 22, exea)
                     
-                   insert_baa_bip(cursor, new_sheet, iplEndStatement, j, 20, exea)
+                   insert_baa_bip(cursor, new_sheet, iplEndStatement, j, 23, exea)
                    
-                   insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, j, 21, exea)
+                   insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, j, 24, exea)
                    
-                   insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, j, 22, exea)
+                   insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, j, 25, exea)
                    
-                   insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, j, 23, exea)
+                   insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, j, 26, exea)
                    
-                   insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, j, 24, exea)
+                   insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, j, 27, exea)
+                   
+                   insert_pitch_spread_hits_percentage(cursor, new_sheet, iplEndStatement, j, 28, exea)
                    
                ######################## Player's Season Totals ####################################
                
@@ -772,31 +926,39 @@ def up_pitchers_log(cursor,update_date,file_name):
                
                insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,season_totals_row,11,exea,60)
                
-               insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 12, exea, 65)
+               insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 12, exea, .4)
                
-               insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, 60)
+               insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, 65)
                
-               insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, season_totals_row, 14, exea, 0.15)
+               insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 14, exea, 60)
                
-               insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 15, exea)
+               insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, season_totals_row, 15, exea, 0.15)
                
-               insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 16, exea)
+               insert_freebases_count(cursor, new_sheet, iplEndStatement, season_totals_row, 16, exea)
+               
+               insert_strikeout_count(cursor, new_sheet, iplEndStatement, season_totals_row, 17, exea)
+               
+               insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 18, exea)
+               
+               insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 19, exea)
                                   
-               insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 17, exea)
+               insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 20, exea)
                
-               insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 18, exea)
+               insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 21, exea)
                
-               insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 19, exea)
+               insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 22, exea)
                 
-               insert_baa_bip(cursor, new_sheet, iplEndStatement, season_totals_row, 20, exea)
+               insert_baa_bip(cursor, new_sheet, iplEndStatement, season_totals_row, 23, exea)
                                  
-               insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, season_totals_row, 21, exea)
+               insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, season_totals_row, 24, exea)
                
-               insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 22, exea)
+               insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 25, exea)
                
-               insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 23, exea)
+               insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 26, exea)
                
-               insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 24, exea)    
+               insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 27, exea)  
+               
+               insert_pitch_spread_hits_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 28, exea)
                                   
                bold_first_column_if_threshold(new_sheet, 5)
                
@@ -846,31 +1008,39 @@ def up_season_log(cursor,date,file_name):
            
            insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,0,10,exea,60)
            
-           insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, 0, 11, exea, 65)
+           insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, 0, 11, exea, .4)
            
-           insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 12, exea, 60)
+           insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, 0, 12, exea, 65)
            
-           insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, 0, 13, exea, 0.15)
+           insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 13, exea, 60)
            
-           insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 14, exea)
+           insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, 0, 14, exea, 0.15)
            
-           insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 15, exea)
+           insert_freebases_count(cursor, new_sheet, iplEndStatement, 0, 15, exea)
+           
+           insert_strikeout_count(cursor, new_sheet, iplEndStatement, 0, 16, exea)
+           
+           insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 17, exea)
+           
+           insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 18, exea)
                               
-           insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, 0, 16, exea)
+           insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, 0, 19, exea)
            
-           insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 17, exea)
+           insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 20, exea)
            
-           insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 18, exea)
+           insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 21, exea)
             
-           insert_baa_bip(cursor, new_sheet, iplEndStatement, 0, 19, exea)
+           insert_baa_bip(cursor, new_sheet, iplEndStatement, 0, 22, exea)
            
-           insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, 0, 20, exea)
+           insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, 0, 23, exea)
            
-           insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, 0, 21, exea)
+           insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, 0, 24, exea)
            
-           insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 22, exea)
+           insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 25, exea)
            
-           insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, 0, 23, exea)
+           insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, 0, 26, exea)
+           
+           insert_pitch_spread_hits_percentage(cursor, new_sheet, iplEndStatement, 0, 27, exea)
            
            
                
@@ -914,31 +1084,39 @@ def up_season_log(cursor,date,file_name):
            
            insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,team_totals_row,10,exea,60)
            
-           insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 11, exea, 65)
+           insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 11, exea, .4)
            
-           insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, 60)
+           insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, 65)
            
-           insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, team_totals_row, 13, exea, 0.15)
+           insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 13, exea, 60)
            
-           insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 14, exea)
+           insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, team_totals_row, 14, exea, 0.15)
            
-           insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 15, exea)
+           insert_freebases_count(cursor, new_sheet, iplEndStatement, team_totals_row, 15, exea)
+           
+           insert_strikeout_count(cursor, new_sheet, iplEndStatement, team_totals_row, 16, exea)
+           
+           insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 17, exea)
+           
+           insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 18, exea)
                               
-           insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 16, exea)
+           insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 19, exea)
            
-           insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 17, exea)
+           insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 20, exea)
            
-           insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 18, exea)
+           insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 21, exea)
             
-           insert_baa_bip(cursor, new_sheet, iplEndStatement, team_totals_row, 19, exea)
+           insert_baa_bip(cursor, new_sheet, iplEndStatement, team_totals_row, 22, exea)
                       
-           insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, team_totals_row, 20, exea)
+           insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, team_totals_row, 23, exea)
            
-           insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 21, exea)
+           insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 24, exea)
            
-           insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 22, exea)
+           insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 25, exea)
            
-           insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 23, exea)
+           insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 26, exea)
+           
+           insert_pitch_spread_hits_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 27, exea)
            
            bold_first_column_if_threshold(new_sheet, 5)
            
@@ -993,31 +1171,39 @@ def up_game_log(cursor,updated_date,file_name):
                 
                 insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,0,10,exea,60)
                 
-                insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, 0, 11, exea, 65)
+                insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, 0, 11, exea, .4)
                 
-                insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 12, exea, 60)
+                insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, 0, 12, exea, 65)
                 
-                insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, 0, 13, exea, 0.15)
+                insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 13, exea, 60)
                 
-                insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 14, exea)
+                insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, 0, 14, exea, 0.15)
                 
-                insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 15, exea)
+                insert_freebases_count(cursor, new_sheet, iplEndStatement, 0, 15, exea)
+                
+                insert_strikeout_count(cursor, new_sheet, iplEndStatement, 0, 16, exea)
+                
+                insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 17, exea)
+                
+                insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, 0, 18, exea)
                                    
-                insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, 0, 16, exea)
+                insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, 0, 19, exea)
                 
-                insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 17, exea)
+                insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 20, exea)
                 
-                insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 18, exea)
+                insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, 0, 21, exea)
                  
-                insert_baa_bip(cursor, new_sheet, iplEndStatement, 0, 19, exea)
+                insert_baa_bip(cursor, new_sheet, iplEndStatement, 0, 22, exea)
                 
-                insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, 0, 20, exea)
+                insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, 0, 23, exea)
                 
-                insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, 0, 21, exea)
+                insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, 0, 24, exea)
                 
-                insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 22, exea)
+                insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 25, exea)
                 
-                insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, 0, 23, exea)
+                insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, 0, 26, exea)
+                
+                insert_pitch_spread_hits_percentage(cursor, new_sheet, iplEndStatement, 0, 27, exea)
                         
                     
                 ################################## Team Totals ############################################# 
@@ -1058,33 +1244,45 @@ def up_game_log(cursor,updated_date,file_name):
                 
                 insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,team_totals_row,10,exea,60)
                 
-                insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 11, exea, 65)
+                insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 11, exea, .4)
                 
-                insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, 60)
+                insert_lead_off_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, 65)
                 
-                insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, team_totals_row, 13, exea, 0.15)
+                insert_overall_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 13, exea, 60)
                 
-                insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 14, exea)
+                insert_baa_with_2_strikes(cursor, new_sheet, iplEndStatement, team_totals_row, 14, exea, 0.15)
                 
-                insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 15, exea)
+                insert_freebases_count(cursor, new_sheet, iplEndStatement, team_totals_row, 15, exea)
+                
+                insert_strikeout_count(cursor, new_sheet, iplEndStatement, team_totals_row, 16, exea)
+                
+                insert_advantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 17, exea)
+                
+                insert_disadvantage_counts_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 18, exea)
                                    
-                insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 16, exea)
+                insert_strikeout_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 19, exea)
                 
-                insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 17, exea)
+                insert_ground_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 20, exea)
                 
-                insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 18, exea)
+                insert_fly_ball_out_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 21, exea)
                  
-                insert_baa_bip(cursor, new_sheet, iplEndStatement, team_totals_row, 19, exea) 
+                insert_baa_bip(cursor, new_sheet, iplEndStatement, team_totals_row, 22, exea) 
                 
-                insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, team_totals_row, 20, exea)
+                insert_at_bat_win_rate(cursor, new_sheet, iplEndStatement, team_totals_row, 23, exea)
                 
-                insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 21, exea)
+                insert_pitch_spread_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 24, exea)
                 
-                insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 22, exea)
+                insert_pitch_spread_strike_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 25, exea)
                 
-                insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 23, exea)
+                insert_pitch_spread_whiff_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 26, exea)
+                
+                insert_pitch_spread_hits_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 27, exea)
                   
                 bold_first_column_if_threshold(new_sheet, 5)
+                
+                ##### INSERT PITCHES THAT GOT HIT #########
+                
+                insert_what_got_hit(cursor, new_sheet, team_totals_row+4, datea)
                 
                 adjust_formating(new_sheet, team_totals_row)
                 
@@ -1155,7 +1353,7 @@ def main():
         # This block will be executed whether an exception occurs or not
         if connection:
             connection.close()
-            print("Connection closed. GO MUTHAAFUCKIN LIONS!!!!")
+            print("Connection closed. GO LIONS!!!!")
 
 if __name__ == "__main__":
     main()
