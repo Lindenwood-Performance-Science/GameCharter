@@ -76,7 +76,7 @@ def main():
             go = True
 
             while go:
-                print(f"Inning: {inning}   Pitcher: {fname} {lname}   Outs: {outs}   Count: {balls}-{strikes}  Batter #{oppo_lineup[lineup_pos]}")
+                print(f"Inning: {inning}   Pitcher: {fname} {lname}   Outs: {outs}   Count: {balls}-{strikes}  Batter: #{oppo_lineup[lineup_pos]} Pitch Count: {pitch_count}")
                 
                 user_input=input(">>> ")
                 input_list=user_input.split()
@@ -88,7 +88,7 @@ def main():
                     if yes_no.upper() == "Y":
                         go = False
                     else:
-                        change = input("What do you wish to change? (Inning, Pitcher, Outs, Count, Batter): ")
+                        change = input("What do you wish to change? (Inning, Pitcher, Outs, Count, Batter, Pitch Count): ")
                         if change.lower() == "inning":
                             inning = int(input("Enter the inning number: "))
                         elif change.lower() == "pitcher":
@@ -107,6 +107,10 @@ def main():
                             balls, strikes = map(int, input("Enter the balls and strikes separated by a space: ").split())
                         elif change.lower() == "batter":
                             oppo_lineup[lineup_pos] = int(input("Enter the number of the current batter: "))
+                        elif change.lower() == "pitch count":
+                            pitch_count= int(input("Enter the corrected pitch count: "))
+                        else:
+                            print("INVALID ENTRY")  
                             
                 elif user_input.lower() == "undo":
                     prev_pitch_id=get_max_pitch_id(cursor)-1

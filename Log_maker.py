@@ -788,7 +788,77 @@ def insert_what_got_hit(cursora,new_sheetb,start_row,dateb):
         put_in= f"#{batter_number}"
         new_sheetb.cell(row=k,column=6,value=put_in)
         
+def insert_whip_by_inning_of_work(cursora,new_sheetb,firstname,lastname,start_row):
+    ##### tracks whip as a pitcher goes deeper into games
+    
+    insert_secondary_header(start_row-2,1,"WHIP IN EACH INNING OF WORK",new_sheetb)
+    insert_secondary_header(start_row-1,1,"First",new_sheetb)
+    insert_secondary_header(start_row-1,2,"Second",new_sheetb)
+    insert_secondary_header(start_row-1,3,"Third",new_sheetb)
+    insert_secondary_header(start_row-1,4,"Fourth",new_sheetb)
+    insert_secondary_header(start_row-1,5,"Fifth",new_sheetb)
+    insert_secondary_header(start_row-1,6,"Sixth",new_sheetb)
+    insert_secondary_header(start_row-1,7,"Seventh",new_sheetb)
+    insert_secondary_header(start_row-1,8,"Eight",new_sheetb)
+    insert_secondary_header(start_row-1,9,"Ninth",new_sheetb)
+    
+    query = "SELECT "
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (1,2,3) THEN 1 END) AS FirstOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (0,1,2) THEN 1 END) AS FirstSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (4,5,6) THEN 1 END) AS SecondOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (3,4,5) THEN 1 END) AS SecondSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (7,8,9) THEN 1 END) AS ThirdOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (6,7,8) THEN 1 END) AS ThirdSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (10,11,12) THEN 1 END) AS FourthOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (9,10,11) THEN 1 END) AS FourthSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (13,14,15) THEN 1 END) AS FifthOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (12,13,14) THEN 1 END) AS FifthSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (16,17,18) THEN 1 END) AS SixthOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (15,16,17) THEN 1 END) AS SixthSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (19,20,21) THEN 1 END) AS SeventhOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (18,19,20) THEN 1 END) AS SeventhSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (21,22,23) THEN 1 END) AS EighthOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (21,22,23) THEN 1 END) AS EighthSafes, "
+    
+    query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (24,25,26) THEN 1 END) AS NinthOuts, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (24,25,26) THEN 1 END) AS NinthSafes "
+    
+    query += "FROM pitch_log_t WHERE fname=%s AND lname=%s AND opponent <> 'Scrimmage'"
         
+    cursora.execute(query,(firstname,lastname))
+    data=cursora.fetchall()
+    
+    for k,(FirstOuts,FirstSafes,SecondOuts,SecondSafes,ThirdOuts,ThirdSafes,FourthOuts,FourthSafes,FifthOuts,FifthSafes,SixthOuts,SixthSafes,SeventhOuts,SeventhSafes,EighthOuts,EighthSafes,NinthOuts,NinthSafes) in enumerate(data,start_row):
+        
+        First=round(FirstSafes/(FirstOuts/3),3) if FirstOuts!=0 else "NA"
+        Second=round(SecondSafes/(SecondOuts/3),3) if SecondOuts!=0 else "NA"
+        Third=round(ThirdSafes/(ThirdOuts/3),3) if ThirdOuts!=0 else "NA"
+        Fourth=round(FourthSafes/(FourthOuts/3),3) if FourthOuts!=0 else "NA"
+        Fifth=round(FifthSafes/(FifthOuts/3),3) if FifthOuts!=0 else "NA"
+        Sixth=round(SixthSafes/(SixthOuts/3),3) if SixthOuts!=0 else "NA"
+        Seventh=round(SeventhSafes/(SeventhOuts/3),3) if SeventhOuts!=0 else "NA"
+        Eighth=round(EighthSafes/(EighthOuts/3),3) if EighthOuts!=0 else "NA"
+        Ninth=round(NinthSafes/(NinthOuts/3),3) if NinthOuts!=0 else "NA"
+        
+        
+        new_sheetb.cell(row=k,column=1,value=First)
+        new_sheetb.cell(row=k,column=2,value=Second)
+        new_sheetb.cell(row=k,column=3,value=Third)
+        new_sheetb.cell(row=k,column=4,value=Fourth)
+        new_sheetb.cell(row=k,column=5,value=Fifth)
+        new_sheetb.cell(row=k,column=6,value=Sixth)
+        new_sheetb.cell(row=k,column=7,value=Seventh)
+        new_sheetb.cell(row=k,column=8,value=Eighth)
+        new_sheetb.cell(row=k,column=9,value=Ninth)
+    
+    
 
 #updates pitchers logs
 def up_pitchers_log(cursor,update_date,file_name):
@@ -961,6 +1031,8 @@ def up_pitchers_log(cursor,update_date,file_name):
                insert_pitch_spread_hits_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 28, exea)
                                   
                bold_first_column_if_threshold(new_sheet, 5)
+               
+               insert_whip_by_inning_of_work(cursor, new_sheet, fname, lname, season_totals_row+4)
                
                adjust_formating(new_sheet, season_totals_row)
           
