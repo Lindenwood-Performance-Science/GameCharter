@@ -6,6 +6,7 @@ Created on Sat Dec 30 13:18:09 2023
 """
 
 import psycopg2
+from datetime import datetime
 
 def create_pitch_log_table(cursor):
     pitch_log_table_creator = """
@@ -56,6 +57,7 @@ def main():
             connection.commit()
 
             date = input("Enter today's date (PUT IT IN MM-DD-YYYY form): ")
+            date_n=datetime.strptime(date, '%m-%d-%Y')
             opponent = "Scrimmage"
             
             home_lineup= [int(x) for x in input("Enter the home team's lineup in number form with spaces between: ").split()]
@@ -199,11 +201,11 @@ def main():
                         AB_result = "0"
 
                     pitch_log_inserter = """
-                        INSERT INTO pitch_log_T (Pitch_ID, Fname, Lname, Inning, Outs, Balls, Strikes, Pitch_Type, Velocity, Pitch_Result, BIP_Result, Batter_Number, AB_result, Pitch_Count, Batter_Of_Inning, Outs_Accrued, Date, Opponent)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                        INSERT INTO pitch_log_T (Pitch_ID, Fname, Lname, Inning, Outs, Balls, Strikes, Pitch_Type, Velocity, Pitch_Result, BIP_Result, Batter_Number, AB_result, Pitch_Count, Batter_Of_Inning, Outs_Accrued, Date, Opponent,Date_N)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s);
                     """
 
-                    cursor.execute(pitch_log_inserter, (pitch_id, fname[counter%2], lname[counter%2], inning[counter%2], outs, balls, strikes, pitch_type, velo, pitch_result, BIP_result, oppo_lineup[counter%2][lineup_pos[counter%2]], AB_result, pitch_count[counter%2], batter_in_inning, outs_accrued[counter%2], date, opponent))
+                    cursor.execute(pitch_log_inserter, (pitch_id, fname[counter%2], lname[counter%2], inning[counter%2], outs, balls, strikes, pitch_type, velo, pitch_result, BIP_result, oppo_lineup[counter%2][lineup_pos[counter%2]], AB_result, pitch_count[counter%2], batter_in_inning, outs_accrued[counter%2], date, opponent,date_n))
                     connection.commit()
 
                     pitch_id += 1

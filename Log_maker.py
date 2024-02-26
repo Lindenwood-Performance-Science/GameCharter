@@ -869,7 +869,7 @@ def up_pitchers_log(cursor,update_date,file_name):
            wipe (workbook)
            
            ##### Name
-           cursor.execute("SELECT DISTINCT fname, lname FROM pitch_log_t WHERE pitch_id <>'0' ")
+           cursor.execute("SELECT DISTINCT fname, lname FROM pitch_log_t WHERE pitch_id <>'0' Order By Fname,Lname ASC")
            data=cursor.fetchall()
            
            for i, (fname, lname) in enumerate(data,3):
@@ -880,7 +880,7 @@ def up_pitchers_log(cursor,update_date,file_name):
                new_sheet=setup(sheetname,workbook,"Name",name,"Updated Date",update_date,"","",header_pos,pitcher_headers)
                
 
-               query="SELECT DISTINCT date AS datea FROM pitch_log_t WHERE fname=%s AND lname = %s and pitch_id <> '0' "
+               query="SELECT DISTINCT date AS datea, date_n FROM pitch_log_t WHERE fname=%s AND lname = %s and pitch_id <> '0' ORDER BY date_n ASC"
                cursor.execute(query,(fname,lname))
                data=cursor.fetchall()
                
@@ -1205,11 +1205,11 @@ def up_game_log(cursor,updated_date,file_name):
           
             wipe (workbook)
             
-            query="SELECT DISTINCT date AS datea,opponent as oppo FROM pitch_log_t WHERE pitch_id<>0 "
+            query="SELECT DISTINCT date AS datea,opponent as oppo, date_n AS new_date FROM pitch_log_t WHERE pitch_id<>0 ORDER BY date_n ASC"
             cursor.execute(query)
             data=cursor.fetchall()
             
-            for j, (datea,oppo) in enumerate(data,3):
+            for j, (datea,oppo,new_date) in enumerate(data,3):
                 
                 datea = str(datea) if datea is not None else ""
                 oppo = str(oppo) if oppo is not None else ""

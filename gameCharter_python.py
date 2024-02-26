@@ -6,6 +6,7 @@ Created on Sun Dec  3 18:46:57 2023
 """
 
 import psycopg2
+from datetime import datetime
 
 def create_pitch_log_table(cursor):
     pitch_log_table_creator = """
@@ -56,6 +57,7 @@ def main():
             connection.commit()
 
             date = input("Enter today's date (PUT IT IN MM-DD-YYYY form): ")
+            date_n=datetime.strptime(date, '%m-%d-%Y')
             opponent = input("Enter today's opponent: ")
 
             oppo_lineup = [int(x) for x in input("Enter the opposing team's lineup in number form with spaces between: ").split()]
@@ -184,11 +186,11 @@ def main():
                         AB_result = "0"
 
                     pitch_log_inserter = """
-                        INSERT INTO pitch_log_T (Pitch_ID, Fname, Lname, Inning, Outs, Balls, Strikes, Pitch_Type, Velocity, Pitch_Result, BIP_Result, Batter_Number, AB_result, Pitch_Count, Batter_Of_Inning, Outs_Accrued, Date, Opponent)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                        INSERT INTO pitch_log_T (Pitch_ID, Fname, Lname, Inning, Outs, Balls, Strikes, Pitch_Type, Velocity, Pitch_Result, BIP_Result, Batter_Number, AB_result, Pitch_Count, Batter_Of_Inning, Outs_Accrued, Date, Opponent,Date_N)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s);
                     """
 
-                    cursor.execute(pitch_log_inserter, (pitch_id, fname, lname, inning, outs, balls, strikes, pitch_type, velo, pitch_result, BIP_result, oppo_lineup[lineup_pos], AB_result, pitch_count, batter_in_inning, outs_accrued, date, opponent))
+                    cursor.execute(pitch_log_inserter, (pitch_id, fname, lname, inning, outs, balls, strikes, pitch_type, velo, pitch_result, BIP_result, oppo_lineup[lineup_pos], AB_result, pitch_count, batter_in_inning, outs_accrued, date, opponent,date_n))
                     connection.commit()
 
                     pitch_id += 1
