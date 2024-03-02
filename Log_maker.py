@@ -173,8 +173,8 @@ def insert_pitches_thrown(cursorb,new_sheetb,ending,row_i,column_i,exe):
 def insert_pitches_per_inning(cursora,new_sheetb,ending,row_i,col_i,exe,trigger):
     ##### Pitches Per Inning
     if (trigger):       
-        query = "SELECT SUM(pitches) AS pitchCount, SUM(max_outs) AS outs, fname, lname FROM (SELECT MAX(pitch_count) as pitches, fname, lname, "
-        query += "MAX(outs_accrued) AS max_outs FROM pitch_log_T WHERE pitch_id <> '0' and opponent <> 'Scrimmage' "
+        query = "SELECT SUM(pitches) AS pitchCount, SUM(max_outs) AS outs FROM (SELECT MAX(pitch_count) as pitches,  "
+        query += "MAX(outs_accrued) AS max_outs,fname,lname FROM pitch_log_T WHERE pitch_id <> '0' and opponent <> 'Scrimmage' "
         query += "GROUP BY date, fname, lname) AS max_outs_per_date GROUP BY fname, lname ORDER BY fname, lname"
     else:
         query= "SELECT COUNT(pitch_id) AS pitchCount, MAX(outs_accrued) AS outs FROM pitch_log_t "
@@ -187,7 +187,7 @@ def insert_pitches_per_inning(cursora,new_sheetb,ending,row_i,col_i,exe,trigger)
         trip=True
     
     ti=0
-    for k, (pitchCount, outs,fname,lname) in enumerate(data, 3):
+    for k, (pitchCount, outs) in enumerate(data, 3):
         if (trip):
             row_i=k
         innings= int(outs)/3 if outs is not None else 0
@@ -1234,7 +1234,7 @@ def up_game_log(cursor,updated_date,file_name):
                 total_pitch_count=insert_pitches_thrown(cursor, new_sheet, iplEndStatement, 0, 2, exea)
                 
                 total_innings=insert_pitches_per_inning(cursor, new_sheet, iplEndStatement, 0, 3, exea,False)
-               
+                
                 total_peak_velo,pitchers = insert_peak_velo(cursor, new_sheet, iplEndStatement, 0, 4, exea) 
                             
                 insert_1st_pitch_strike_percentage(cursor, new_sheet, iplEndStatement, 0, 5, exea, 60)
