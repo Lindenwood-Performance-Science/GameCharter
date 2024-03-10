@@ -816,31 +816,31 @@ def insert_whip_by_inning_of_work(cursora,new_sheetb,firstname,lastname,start_ro
     
     query = "SELECT "
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (1,2,3) THEN 1 END) AS FirstOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (0,1,2) THEN 1 END) AS FirstSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (0,1,2) THEN 1 END) AS FirstSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (4,5,6) THEN 1 END) AS SecondOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (3,4,5) THEN 1 END) AS SecondSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (3,4,5) THEN 1 END) AS SecondSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (7,8,9) THEN 1 END) AS ThirdOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (6,7,8) THEN 1 END) AS ThirdSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (6,7,8) THEN 1 END) AS ThirdSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (10,11,12) THEN 1 END) AS FourthOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (9,10,11) THEN 1 END) AS FourthSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (9,10,11) THEN 1 END) AS FourthSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (13,14,15) THEN 1 END) AS FifthOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (12,13,14) THEN 1 END) AS FifthSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (12,13,14) THEN 1 END) AS FifthSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (16,17,18) THEN 1 END) AS SixthOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (15,16,17) THEN 1 END) AS SixthSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (15,16,17) THEN 1 END) AS SixthSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (19,20,21) THEN 1 END) AS SeventhOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (18,19,20) THEN 1 END) AS SeventhSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (18,19,20) THEN 1 END) AS SeventhSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (21,22,23) THEN 1 END) AS EighthOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (21,22,23) THEN 1 END) AS EighthSafes, "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (21,22,23) THEN 1 END) AS EighthSafes, "
     
     query += "COUNT(CASE WHEN ab_result='out' AND outs_accrued IN (24,25,26) THEN 1 END) AS NinthOuts, "
-    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result<>'E' AND outs_accrued IN (24,25,26) THEN 1 END) AS NinthSafes "
+    query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') AND outs_accrued IN (24,25,26) THEN 1 END) AS NinthSafes "
     
     query += "FROM pitch_log_t WHERE fname=%s AND lname=%s AND opponent <> 'Scrimmage'"
         
@@ -883,10 +883,9 @@ def insert_avg_peak_velo_over_time_chart(cursora,new_sheetb,firstname,lastname,s
     new_sheetb.cell(row=start_row,column=2,value="Max Velo")
     new_sheetb.cell(row=start_row,column=3,value="Average Velo")
    
-    x_axis_labels=[]
+    
     for k,(time,maxi,average) in enumerate(data, start_row+1):
         new_sheetb.cell(row=k,column=1,value=time)
-        x_axis_labels.append(time.strftime("%b %d"))
         new_sheetb.cell(row=k,column=2,value=maxi)
         new_sheetb.cell(row=k,column=3,value=average)
         
