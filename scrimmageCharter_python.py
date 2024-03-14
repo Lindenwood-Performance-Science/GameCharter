@@ -167,7 +167,7 @@ def main():
                 else:
                     pitch_type, velo, pitch_result = user_input.split()
                     
-                    if pitch_type not in ("FB", "CH", "CU", "SL", "SP","CB"):
+                    if pitch_type not in ("FF","CB","SL","CH", "FT","CT","SP"):
                         print("Invalid Pitch Type Entry.")
                         continue  # jump back to the start of the loop
 

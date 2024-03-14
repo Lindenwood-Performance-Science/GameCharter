@@ -242,9 +242,9 @@ def insert_1st_pitch_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe
             
 def insert_off_speed_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,goodNum):
     ##### Off-Speed Strike Percentage
-    query="SELECT CASE WHEN COUNT(CASE WHEN pitch_type <> 'FB' and pitch_type <> 'CU' THEN 1 END) > 0 "
-    query+="THEN (COUNT(CASE WHEN pitch_type <> 'FB' AND pitch_type <> 'CU' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / "
-    query+="COUNT(CASE WHEN pitch_type <> 'FB' and pitch_type <> 'CU' THEN 1 END)) ELSE 0 END AS PercentageOFF FROM pitch_log_t "
+    query="SELECT CASE WHEN COUNT(CASE WHEN pitch_type NOT IN ('FF','FT','CT') THEN 1 END) > 0 "
+    query+="THEN (COUNT(CASE WHEN pitch_type NOT IN ('FF','FT','CT') AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / "
+    query+="COUNT(CASE WHEN pitch_type NOT IN ('FF','FT','CT') THEN 1 END)) ELSE 0 END AS PercentageOFF FROM pitch_log_t "
     query+=ending
     cursora.execute(query ,exe)
     data=cursora.fetchall()
@@ -286,14 +286,14 @@ def insert_velo_range(cursora,new_sheetb,ending,row_i,col_i,exe,trigger1,trigger
     ##### Velocity Range
     query="SELECT MIN(velocity) AS MINV, MAX(velocity) AS MAXV FROM pitch_log_t "
     if trigger1:
-        query += "WHERE pitch_type = 'FB' AND pitch_id <> '0' AND opponent <> 'Scrimmage' GROUP BY fname,lname ORDER BY fname,lname"
+        query += "WHERE pitch_type IN ('FF','FT','CT') AND pitch_id <> '0' AND opponent <> 'Scrimmage' GROUP BY fname,lname ORDER BY fname,lname"
     if trigger2:
-        query+="WHERE pitch_type = 'FB' AND date = %s AND opponent = %s AND opponent <> 'Scrimmage' GROUP BY fname,lname ORDER BY fname,lname"
+        query+="WHERE pitch_type IN ('FF','FT','CT') AND date = %s AND opponent = %s AND opponent <> 'Scrimmage' GROUP BY fname,lname ORDER BY fname,lname"
     if trigger3:
-        query+="WHERE pitch_type = 'FB' AND date = %s AND opponent = %s GROUP BY fname,lname ORDER BY fname,lname"
+        query+="WHERE pitch_type IN ('FF','FT','CT') AND date = %s AND opponent = %s GROUP BY fname,lname ORDER BY fname,lname"
     if not (trigger1 or trigger2 or trigger3):
         query+= ending
-        query += " AND pitch_type = 'FB' "
+        query += " AND pitch_type IN ('FF','FT','CT') "
     
     cursora.execute(query, exe)
     data=cursora.fetchall()
@@ -540,9 +540,9 @@ def insert_strikeout_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
         
 def insert_ground_ball_out_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     ##### Ground Ball Out Percentage
-    query = "SELECT CASE WHEN COUNT(CASE WHEN pitch_result = 'BIP' THEN 1 END) >0"
+    query = "SELECT CASE WHEN COUNT(CASE WHEN ab_result<>'0' THEN 1 END) >0"
     query += " THEN (COUNT(CASE WHEN bip_result = 'GO' OR bip_result = 'DP' THEN 1 END) * 100 /"
-    query += " COUNT(CASE WHEN pitch_result = 'BIP' THEN 1 END)) ELSE 0 END AS GBOPer FROM pitch_log_t "
+    query += " COUNT(CASE WHEN ab_result<>'0' THEN 1 END)) ELSE 0 END AS GBOPer FROM pitch_log_t "
     query += ending
     cursora.execute(query, exe)
     data=cursora.fetchall()
@@ -558,9 +558,9 @@ def insert_ground_ball_out_percentage(cursora,new_sheetb,ending,row_i,col_i,exe)
         
 def insert_fly_ball_out_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     ##### Fly Ball Out Percentage
-    query = "SELECT CASE WHEN COUNT(CASE WHEN pitch_result = 'BIP' THEN 1 END) >0"
+    query = "SELECT CASE WHEN COUNT(CASE WHEN ab_result<>'0' THEN 1 END) >0"
     query += " THEN (COUNT(CASE WHEN bip_result = 'FO' THEN 1 END) * 100 /" 
-    query += " COUNT(CASE WHEN pitch_result = 'BIP' THEN 1 END)) ELSE 0 END AS FBOPer FROM pitch_log_t "
+    query += " COUNT(CASE WHEN ab_result<>'0' THEN 1 END)) ELSE 0 END AS FBOPer FROM pitch_log_t "
     query += ending
     cursora.execute(query, exe)
     data=cursora.fetchall()
@@ -619,8 +619,8 @@ def insert_at_bat_win_rate(cursora,new_sheetb,ending,row_i,col_i,exe):
 def insert_pitch_spread_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     ##### Fastball - Curveball - Slider - Change UP - Splitter Spread Percentage
     query = "SELECT "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FB' AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'FB' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END)) ELSE 0 END AS FBP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FF' AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FF' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END)) ELSE 0 END AS FFP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CB' AND pitch_result <> '0' THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CB' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END)) ELSE 0 END AS CBP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SL' AND pitch_result <> '0' THEN 1 END) > 0 "
@@ -629,8 +629,10 @@ def insert_pitch_spread_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CH' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END)) ELSE 0 END AS CHP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SP' AND pitch_result <> '0' THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'SP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END))ELSE 0 END AS SPP, "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CU' AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'CU' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END))ELSE 0 END AS CUP "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FT' AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FT' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END)) ELSE 0 END AS FTP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CT' AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CT' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' THEN 1 END))ELSE 0 END AS CTP "
     query += "FROM pitch_log_t "
     query +=ending
     
@@ -640,24 +642,25 @@ def insert_pitch_spread_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     if (row_i==0):
         trip=True
         
-    for k,(FBP,CBP,SLP,CHP,SPP,CUP) in enumerate(data,3):
+    for k,(FFP,CBP,SLP,CHP,SPP,FTP,CTP) in enumerate(data,3):
         if (trip):
             row_i=k
-        FBP=int(FBP) if FBP is not None else 0
+        FFP=int(FFP) if FFP is not None else 0
         CBP=int(CBP) if CBP is not None else 0
         SLP=int(SLP) if SLP is not None else 0
         CHP=int(CHP) if CHP is not None else 0
         SPP=int(SPP) if SPP is not None else 0
-        CUP=int(CUP) if CUP is not None else 0  
+        FTP=int(FTP) if FTP is not None else 0
+        CTP=int(CTP) if CTP is not None else 0  
         
-        put_in = f"{FBP}-{CBP}-{SLP}-{CHP}-{SPP}-{CUP}"
+        put_in = f"{FFP}-{CBP}-{SLP}-{CHP}-{SPP}-{FTP}-{CTP}"
         new_sheetb.cell(row=row_i, column=col_i, value=put_in)
         
 def insert_pitch_spread_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
-    ##### Fastball - Curveball - Slider - Change UP - Splitter Spread Strike Percentage
+    ##### Four Seam - Curveball - Slider - Change UP - Splitter - Two Seam - Cutter Spread Strike Percentage
     query = "SELECT "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FB' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 " 
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'FB' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FB' THEN 1 END)) ELSE 0 END AS FBP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FF' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 " 
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FF' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FF' THEN 1 END)) ELSE 0 END AS FFP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CB' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CB' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CB' THEN 1 END)) ELSE 0 END AS CBP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SL' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 "
@@ -666,8 +669,10 @@ def insert_pitch_spread_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CH' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CH' THEN 1 END)) ELSE 0 END AS CHP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SP' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'SP' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'SP' THEN 1 END)) ELSE 0 END AS SPP, "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CU' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'CU' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CU' THEN 1 END)) ELSE 0 END AS CUP "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FT' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 " 
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FT' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FT' THEN 1 END)) ELSE 0 END AS FTP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CT' AND pitch_result <> 'B' AND pitch_result <> 'HBP' AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CT' AND pitch_result <> 'B' AND pitch_result <> 'HBP' THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CT' THEN 1 END)) ELSE 0 END AS CTP "
     query += "FROM pitch_log_t "
     query +=ending
     
@@ -677,24 +682,25 @@ def insert_pitch_spread_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,
     if (row_i==0):
         trip=True
         
-    for k,(FBP,CBP,SLP,CHP,SPP,CUP) in enumerate(data,3):
+    for k,(FFP,CBP,SLP,CHP,SPP,FTP,CTP) in enumerate(data,3):
         if (trip):
             row_i=k
-        FBP=int(FBP) if FBP is not None else 0
+        FFP=int(FFP) if FFP is not None else 0
         CBP=int(CBP) if CBP is not None else 0
         SLP=int(SLP) if SLP is not None else 0
         CHP=int(CHP) if CHP is not None else 0
         SPP=int(SPP) if SPP is not None else 0
-        CUP=int(CUP) if CUP is not None else 0  
+        FTP=int(FTP) if FTP is not None else 0 
+        CTP=int(CTP) if CTP is not None else 0  
                 
-        put_in = f"{FBP}-{CBP}-{SLP}-{CHP}-{SPP}-{CUP}"
+        put_in = f"{FFP}-{CBP}-{SLP}-{CHP}-{SPP}-{FTP}-{CTP}"
         new_sheetb.cell(row=row_i, column=col_i, value=put_in)       
         
 def insert_pitch_spread_whiff_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     ##### Fastball - Curveball - Slider - Change UP - Splitter Spread whiff Percentage
     query = "SELECT "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FB' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'FB' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FB' THEN 1 END)) ELSE 0 END AS FBP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FF' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FF' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FF' THEN 1 END)) ELSE 0 END AS FFP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CB' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CB' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CB' THEN 1 END)) ELSE 0 END AS CBP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SL' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
@@ -703,8 +709,10 @@ def insert_pitch_spread_whiff_percentage(cursora,new_sheetb,ending,row_i,col_i,e
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CH' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CH' THEN 1 END)) ELSE 0 END AS CHP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SP' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS')  AND pitch_result <> '0' THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'SP' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'SP' THEN 1 END)) ELSE 0 END AS SPP, "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CU' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'CU' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CU' THEN 1 END)) ELSE 0 END AS CUP "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FT' THEN 1 END)) ELSE 0 END AS FTP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CT' THEN 1 END)) ELSE 0 END AS CTP "
     query += "FROM pitch_log_t "
     query +=ending
     
@@ -714,24 +722,25 @@ def insert_pitch_spread_whiff_percentage(cursora,new_sheetb,ending,row_i,col_i,e
     if (row_i==0):
         trip=True
         
-    for k,(FBP,CBP,SLP,CHP,SPP,CUP) in enumerate(data,3):
+    for k,(FFP,CBP,SLP,CHP,SPP,FTP,CTP) in enumerate(data,3):
         if (trip):
             row_i=k
-        FBP=int(FBP) if FBP is not None else 0
+        FFP=int(FFP) if FFP is not None else 0
         CBP=int(CBP) if CBP is not None else 0
         SLP=int(SLP) if SLP is not None else 0
         CHP=int(CHP) if CHP is not None else 0
         SPP=int(SPP) if SPP is not None else 0
-        CUP=int(CUP) if CUP is not None else 0  
+        FTP=int(FTP) if FTP is not None else 0 
+        CTP=int(CTP) if CTP is not None else 0  
                 
-        put_in = f"{FBP}-{CBP}-{SLP}-{CHP}-{SPP}-{CUP}"
+        put_in = f"{FFP}-{CBP}-{SLP}-{CHP}-{SPP}-{FTP}-{CTP}"
         new_sheetb.cell(row=row_i, column=col_i, value=put_in)
         
 def insert_pitch_spread_hits_percentage(cursora,new_sheetb,ending,row_i,col_i,exe):
     ##### Fastball - Curveball - Slider - Change UP - Splitter Spread Hit Percentage
     query = "SELECT "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'FB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS FBP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FF' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FF' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS FFP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CB' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS CBP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SL' AND bip_result in ('1B','2B','3B','HR') AND pitch_result <> '0' THEN 1 END) > 0 "
@@ -740,8 +749,10 @@ def insert_pitch_spread_hits_percentage(cursora,new_sheetb,ending,row_i,col_i,ex
     query += "THEN (COUNT(CASE WHEN pitch_type = 'CH' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS CHP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SP' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
     query += "THEN (COUNT(CASE WHEN pitch_type = 'SP' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS SPP, "
-    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CU' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'CU' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS CUP "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FT' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FT' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS FTP, "
+    query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CT' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) > 0 "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CT' AND bip_result in ('1B','2B','3B','HR') THEN 1 END) * 100.0 / COUNT(CASE WHEN bip_result in ('1B','2B','3B','HR') THEN 1 END)) ELSE 0 END AS CUP "
     query += "FROM pitch_log_t "
     query +=ending
     
@@ -751,17 +762,18 @@ def insert_pitch_spread_hits_percentage(cursora,new_sheetb,ending,row_i,col_i,ex
     if (row_i==0):
         trip=True
         
-    for k,(FBP,CBP,SLP,CHP,SPP,CUP) in enumerate(data,3):
+    for k,(FFP,CBP,SLP,CHP,SPP,FTP,CTP) in enumerate(data,3):
         if (trip):
             row_i=k
-        FBP=int(FBP) if FBP is not None else 0
+        FFP=int(FFP) if FFP is not None else 0
         CBP=int(CBP) if CBP is not None else 0
         SLP=int(SLP) if SLP is not None else 0
         CHP=int(CHP) if CHP is not None else 0
         SPP=int(SPP) if SPP is not None else 0
-        CUP=int(CUP) if CUP is not None else 0  
+        FTP=int(FTP) if FTP is not None else 0 
+        CTP=int(CTP) if CTP is not None else 0  
                 
-        put_in = f"{FBP}-{CBP}-{SLP}-{CHP}-{SPP}-{CUP}"
+        put_in = f"{FFP}-{CBP}-{SLP}-{CHP}-{SPP}-{FTP}-{CTP}"
         new_sheetb.cell(row=row_i, column=col_i, value=put_in)
                
 def insert_what_got_hit(cursora,new_sheetb,start_row,exe):
@@ -777,7 +789,7 @@ def insert_what_got_hit(cursora,new_sheetb,start_row,exe):
     
     query = "SELECT fname, lname, pitch_type,velocity,balls,strikes,bip_result,batter_number "
     query += "FROM pitch_log_T WHERE bip_result in ('1B','2B','3B','HR') and date = %s and opponent = %s"
-    query += "Order By fname,lname ASC"
+    query += "Order By pitch_id ASC"
     cursora.execute(query,exe)
     data=cursora.fetchall()
     
@@ -874,7 +886,7 @@ def insert_whip_by_inning_of_work(cursora,new_sheetb,firstname,lastname,start_ro
 def insert_avg_peak_velo_over_time_chart(cursora,new_sheetb,firstname,lastname,start_row):
     
     query = "SELECT date_n AS time, MAX(velocity) AS maxi, AVG(velocity) AS average "
-    query+= "FROM pitch_log_T WHERE pitch_type= 'FB' AND fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n"
+    query+= "FROM pitch_log_T WHERE pitch_type IN ('FF','FT') AND fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n"
     
     cursora.execute(query,(firstname,lastname))
     data=cursora.fetchall()
@@ -1353,11 +1365,11 @@ def wipe_and_up_pitchers_log(cursor,update_date,file_name):
                    insert_1st_pitch_strike_percentage(cursor, new_sheet, iplEndStatement, j, 6, exea, 60)
                    
                    insert_off_speed_strike_percentage(cursor, new_sheet, iplEndStatement, j, 7, exea, 50)
-                 
+                   
                    insert_swing_and_miss_percentage(cursor, new_sheet,iplEndStatement, j, 8, exea, 25)
                         
                    insert_velo_range(cursor, new_sheet, iplEndStatement, j, 9, exea,False,False,False)        
-                           
+                   
                    insert_chases(cursor, new_sheet, iplEndStatement, j, 10, exea, False, 0)
                    
                    insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,j,11,exea,60)
