@@ -1062,7 +1062,7 @@ def up_pitchers_log(cursor,update_date,file_name):
                         
                    insert_velo_range(cursor, new_sheet, iplEndStatement, season_totals_row, 9, exea,False,False,False)        
                            
-                   insert_chases(cursor, new_sheet, iplEndStatement, season_totals_row, 10, exea, False, 0)
+                   insert_chases(cursor, new_sheet, iplEndStatement, season_totals_row, 10, exea, False, total_innings)
                    
                    insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,season_totals_row,11,exea,60)
                    
@@ -1262,7 +1262,7 @@ def up_pitchers_log(cursor,update_date,file_name):
                             
                        insert_velo_range(cursor, new_sheet, iplEndStatement, season_totals_row, 9, exea,False,False,False)        
                                
-                       insert_chases(cursor, new_sheet, iplEndStatement, season_totals_row, 10, exea, False, 0)
+                       insert_chases(cursor, new_sheet, iplEndStatement, season_totals_row, 10, exea, False, total_innings)
                        
                        insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,season_totals_row,11,exea,60)
                        
@@ -1445,7 +1445,7 @@ def wipe_and_up_pitchers_log(cursor,update_date,file_name):
                     
                insert_velo_range(cursor, new_sheet, iplEndStatement, season_totals_row, 9, exea,False,False,False)        
                        
-               insert_chases(cursor, new_sheet, iplEndStatement, season_totals_row, 10, exea, False, 0)
+               insert_chases(cursor, new_sheet, iplEndStatement, season_totals_row, 10, exea, False, total_innings)
                
                insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,season_totals_row,11,exea,60)
                
@@ -1779,7 +1779,7 @@ def up_game_log(cursor,updated_date,file_name):
                      
                 insert_velo_range(cursor, new_sheet, iplEndStatement, team_totals_row, 8, exea,False,False,False)   
                         
-                insert_chases(cursor, new_sheet, iplEndStatement, team_totals_row, 9, exea, False, 0)
+                insert_chases(cursor, new_sheet, iplEndStatement, team_totals_row, 9, exea, False, total_innings)
                 
                 insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,team_totals_row,10,exea,60)
                 
@@ -1945,7 +1945,7 @@ def wipe_and_up_game_log(cursor,updated_date,file_name):
                      
                 insert_velo_range(cursor, new_sheet, iplEndStatement, team_totals_row, 8, exea,False,False,False)   
                         
-                insert_chases(cursor, new_sheet, iplEndStatement, team_totals_row, 9, exea, False, 0)
+                insert_chases(cursor, new_sheet, iplEndStatement, team_totals_row, 9, exea, False, total_innings)
                 
                 insert_ahead_after_3_pitches_percentage(cursor,new_sheet,iplEndStatement,team_totals_row,10,exea,60)
                 
