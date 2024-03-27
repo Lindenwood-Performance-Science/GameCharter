@@ -28,7 +28,8 @@ def create_pitch_log_table(cursor):
             Pitch_Count INT,
             Batter_Of_Inning INT,
             Date VARCHAR(255),
-            Opponent VARCHAR(255)
+            Opponent VARCHAR(255),
+            Date_N Date
         );
     """
     cursor.execute(pitch_log_table_creator)
