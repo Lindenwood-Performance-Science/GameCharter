@@ -9,6 +9,10 @@ import openpyxl
 from openpyxl.styles import Font
 from openpyxl.styles import PatternFill
 from openpyxl.chart import ScatterChart, Reference, Series
+from openpyxl.drawing.image import Image
+from openpyxl.chart import ScatterChart, Reference, Series
+import matplotlib.pyplot as plt
+import io
 import os
 
 ##globals
@@ -1042,6 +1046,49 @@ def insert_avg_peak_velo_over_time_chart(cursora,new_sheetb,firstname,lastname,s
 
     new_sheetb.add_chart(chart, "A{}".format(start_row))   
     
+def insert_movement_profile_chart(cursora,new_sheetb,firstname,lastname,start_row):
+    query = "SELECT inducedvertbreak AS Vert, horzbreak AS Horz, pitch_type "
+    query += "FROM trackman_pitching_data_t WHERE pfname = %s and plname=%s"
+    print(firstname)
+    
+    cursora.execute(query,(firstname,lastname))
+    data=cursora.fetchall()
+    
+    # Create a scatter plot using matplotlib
+    plt.figure(figsize=(8, 6))
+    # Define colors for different pitch types
+    colors = {'Fastball': 'r','Four-Seam':'r', 'Curveball': 'g', 'ChangeUp': 'b', 'Slider': 'c', 'TwoSeamFastBall': 'm', 'Sinker':'y','Cutter':'#FFA500'}
+
+    scatter_objs = []
+    labels = []
+
+    for pitch_type, color in colors.items():
+    # Filter data for current pitch type
+        filtered_data = [row for row in data if row[2] == pitch_type]
+        if filtered_data:
+        # Extract x and y values for scatter plot
+            x_values = [row[1] for row in filtered_data]
+            y_values = [row[0] for row in filtered_data]
+        # Plot scatter plot for current pitch type
+            scatter_obj = plt.scatter(x_values, y_values, color=color, label=pitch_type)
+            scatter_objs.append(scatter_obj)
+            labels.append(pitch_type)
+            
+            
+    plt.title("Movement Profiles")
+    plt.xlabel("Horizontal Break")
+    plt.ylabel("Induced Vertical Break")
+    plt.grid(True)
+
+    # Save the plot to a BytesIO object
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+
+    # Insert the image into the Excel file
+    img = Image(buffer)
+    new_sheetb.add_image(img, "F{}".format(start_row))
+    
     
 def up_pitchers_log(cursor,update_date,file_name):
            
@@ -1244,6 +1291,8 @@ def up_pitchers_log(cursor,update_date,file_name):
                    insert_whip_by_inning_of_work(cursor, new_sheet, firstname, lastname, season_totals_row+4)
                    
                    insert_avg_peak_velo_over_time_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
+                   
+                   insert_movement_profile_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
                    
                    adjust_formating(new_sheet, season_totals_row)
                    
@@ -1461,6 +1510,8 @@ def up_pitchers_log(cursor,update_date,file_name):
                        
                        insert_avg_peak_velo_over_time_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
                        
+                       insert_movement_profile_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
+                       
                        adjust_formating(new_sheet, season_totals_row)
                   
            savebook(workbook, file_path, "Pitcher Logs Updated")
@@ -1659,6 +1710,8 @@ def wipe_and_up_pitchers_log(cursor,update_date,file_name):
                insert_whip_by_inning_of_work(cursor, new_sheet, fname, lname, season_totals_row+4)
                
                insert_avg_peak_velo_over_time_chart(cursor, new_sheet, fname, lname, season_totals_row+6)
+               
+               insert_movement_profile_chart(cursor, new_sheet, fname, lname, season_totals_row+6)
                
                adjust_formating(new_sheet, season_totals_row)
           
