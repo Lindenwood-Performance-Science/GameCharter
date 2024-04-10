@@ -10,18 +10,17 @@ from openpyxl.styles import Font
 from openpyxl.styles import PatternFill
 from openpyxl.chart import ScatterChart, Reference, Series
 from openpyxl.drawing.image import Image
-from openpyxl.chart import ScatterChart, Reference, Series
 import matplotlib.pyplot as plt
 import io
 import os
 
 ##globals
 header_pos=['A2','B2','C2','D2','E2','F2','G2','H2','I2','J2','K2','L2','M2','N2','O2','P2','Q2','R2','S2','T2','U2','V2','W2','X2','Y2','Z2','AA2','AB2','AC2','AD2','AE2','AF2']
-pitch_headersa=['Date','Opponent','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)','OPP SLG % (.400)',' WHIP ','OPP OBP','OPP OPS']
-pitcher_headersb=['LO % (65)','Overall Strike % (60)','OPP BAA','BAA w/ 2K (.150)','BAA BIP','Freebases','Strikeouts','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %','Pitch Spread Hit %']
+pitch_headersa=['Date','Opponent','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','FB Velo-Range','Chases','A3P % (60)','OPP SLG % (.400)',' WHIP ','OPP OBP','OPP OPS']
+pitcher_headersb=['LO % (65)','Overall Strike % (60)','OPP BAA','BAA w/ 2K (.150)','BAA BIP','Freebases','Strikeouts','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','PA Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %','Pitch Spread Hit %']
 pitcher_headers=pitch_headersa+pitcher_headersb
-season_game_headersa=['Name','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','Velo-Range','Chases','A3P % (60)','OPP SLG % (.400)',' WHIP ','OPP OBP','OPP OPS']
-season_game_headersb=['LO % (65)','Overall Strike % (60)','OPP BAA','BAA w/ 2K (.150)','BAA BIP','Freebases','Strikeouts','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','AB Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %','Pitch Spread Hit %' ]
+season_game_headersa=['Name','Pitches','Pitches Per Inning','Peak Velocity','1st Pitch % (60)','OS Strike % (50)','S/M % (25)','FB Velo-Range','Chases','A3P % (60)','OPP SLG % (.400)',' WHIP ','OPP OBP','OPP OPS']
+season_game_headersb=['LO % (65)','Overall Strike % (60)','OPP BAA','BAA w/ 2K (.150)','BAA BIP','Freebases','Strikeouts','Pitches Ahead %','Pitches Behind %','Strikeout %','Ground Ball Out %','Fly Ball Out %','PA Win %','Pitch Spread %','Pitch Spread Strike %', 'Pitch Spread Whiff %','Pitch Spread Hit %' ]
 season_game_headers=season_game_headersa+season_game_headersb
 
 
@@ -269,7 +268,7 @@ def insert_swing_and_miss_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,g
     ##### Swing and Miss Percentage
     query ="SELECT CASE WHEN COUNT(CASE WHEN pitch_result <>'0' THEN 1 END) > 0 "
     query+="THEN (COUNT(CASE WHEN pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS' THEN 1 END) * 100.0 / "
-    query+="COUNT(CASE WHEN pitch_result <> '0' THEN 1 END)) ELSE 0 END AS Misses FROM pitch_log_t "
+    query+="COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') THEN 1 END)) ELSE 0 END AS Misses FROM pitch_log_t "
     query+= ending
     cursora.execute(query,exe)
     data=cursora.fetchall()
@@ -394,18 +393,24 @@ def insert_opponent_slugging_percentage(cursora,new_sheetb,ending,row_i,col_i,ex
         if put_in <= goodNum:
             cella.font = Font(bold=True)
             
-def insert_WHIP(cursora,new_sheetb,ending,row_i,col_i,exe,trigger,innings_sub):
+def insert_WHIP(cursora,new_sheetb,ending,row_i,col_i,exe,trigger1,trigger2,innings_sub):
     #### Walks and Hits Per Innings Pitched
-    if (trigger):
+    if (trigger1):
         query = "SELECT SUM(safe_case) AS safes, SUM(max_outs) AS OUTS FROM (SELECT SUM(CASE WHEN "
-        query += "ab_result='safe' AND bip_result NOT IN ('E','HBP') THEN 1 ELSE 0 END) AS safe_case, MAX(outs_accrued) AS max_outs,fname,lname "
+        query += "ab_result='safe' AND bip_result <>'E' AND pitch_result <>'HBP' THEN 1 ELSE 0 END) AS safe_case, MAX(outs_accrued) AS max_outs,fname,lname "
         query += "FROM pitch_log_T WHERE pitch_id <> '0' AND opponent <>'Scrimmage' "
         query += "GROUP BY date, fname, lname) AS max_outs_per_date GROUP BY fname, lname ORDER BY fname, lname"
     else:
         query = "SELECT "
-        query += "COUNT(CASE WHEN ab_result='safe' AND bip_result NOT IN ('E','HBP') THEN 1 END) AS Safes, "
-        query += "MAX(outs_accrued) AS OUTS FROM pitch_log_T "
+        query += "COUNT(CASE WHEN ab_result='safe' AND bip_result <>'E' AND pitch_result <>'HBP' THEN 1 END) AS Safes, "
+        query += "MAX(outs_accrued) AS OUTS FROM pitch_log_T  "
         query += ending
+        
+    if (trigger2):
+        query = "SELECT "
+        query += "COUNT(CASE WHEN ab_result='safe' AND bip_result <>'E' AND pitch_result <>'HBP' THEN 1 END) AS Safes, "
+        query += "MAX(outs_accrued) AS OUTS FROM pitch_log_T WHERE pitch_id<>'0' and opponent <> 'Scrimmage' "
+        
     cursora.execute(query,exe)
     data=cursora.fetchall()
     trip=False
@@ -535,7 +540,7 @@ def insert_overall_strike_percentage(cursora,new_sheetb,ending,row_i,col_i,exe,g
 
 def insert_baa(cursora,new_sheetb,ending,row_i,col_i,exe):
     ##### Oppenent Batting Average
-    query = "SELECT COUNT(CASE WHEN pitch_result<>'B' AND pitch_result<>'HBP' AND ab_result<>'0' THEN 1 END) AS AB, "
+    query = "SELECT COUNT(CASE WHEN pitch_result<>'B' AND pitch_result<>'HBP' AND bip_result <>'E' AND ab_result<>'0' THEN 1 END) AS AB, "
     query+="COUNT(CASE WHEN bip_result IN ('1B','2B','3B','HR')  THEN 1 END) AS SAFE FROM pitch_log_t "
     query+=ending
     cursora.execute(query,exe)
@@ -827,19 +832,19 @@ def insert_pitch_spread_whiff_percentage(cursora,new_sheetb,ending,row_i,col_i,e
     ##### Fastball - Curveball - Slider - Change UP - Splitter Spread whiff Percentage
     query = "SELECT "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FF' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'FF' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FF' THEN 1 END)) ELSE 0 END AS FFP, "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FF' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') AND pitch_type = 'FF' THEN 1 END)) ELSE 0 END AS FFP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CB' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'CB' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CB' THEN 1 END)) ELSE 0 END AS CBP, "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CB' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') AND pitch_type = 'CB' THEN 1 END)) ELSE 0 END AS CBP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SL' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'SL' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'SL' THEN 1 END)) ELSE 0 END AS SLP, "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'SL' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') AND pitch_type = 'SL' THEN 1 END)) ELSE 0 END AS SLP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CH' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'CH' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CH' THEN 1 END)) ELSE 0 END AS CHP, "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CH' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') AND pitch_type = 'CH' THEN 1 END)) ELSE 0 END AS CHP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'SP' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS')  AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'SP' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'SP' THEN 1 END)) ELSE 0 END AS SPP, "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'SP' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') AND pitch_type = 'SP' THEN 1 END)) ELSE 0 END AS SPP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'FT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'FT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'FT' THEN 1 END)) ELSE 0 END AS FTP, "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'FT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') AND pitch_type = 'FT' THEN 1 END)) ELSE 0 END AS FTP, "
     query += "CASE WHEN COUNT(CASE WHEN pitch_type = 'CT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') AND pitch_result <> '0' THEN 1 END) > 0 "
-    query += "THEN (COUNT(CASE WHEN pitch_type = 'CT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result <> '0' AND pitch_type = 'CT' THEN 1 END)) ELSE 0 END AS CTP "
+    query += "THEN (COUNT(CASE WHEN pitch_type = 'CT' AND (pitch_result = 'SS' or pitch_result = 'SSC' or pitch_result = 'D3SS') THEN 1 END) * 100.0 / COUNT(CASE WHEN pitch_result IN('SS','SSC','D3SS','F','BIP') AND pitch_type = 'CT' THEN 1 END)) ELSE 0 END AS CTP "
     query += "FROM pitch_log_t "
     query +=ending
     
@@ -1010,7 +1015,7 @@ def insert_whip_by_inning_of_work(cursora,new_sheetb,firstname,lastname,start_ro
         new_sheetb.cell(row=k,column=9,value=Ninth)
         
 
-def insert_avg_peak_velo_over_time_chart(cursora,new_sheetb,firstname,lastname,start_row):
+def insert_avg_peak_FB_velo_over_time_chart(cursora,new_sheetb,firstname,lastname,start_row):
     
     query = "SELECT date_n AS time, MAX(velocity) AS maxi, AVG(velocity) AS average "
     query+= "FROM pitch_log_T WHERE pitch_type IN ('FF','FT') AND fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n"
@@ -1049,18 +1054,24 @@ def insert_avg_peak_velo_over_time_chart(cursora,new_sheetb,firstname,lastname,s
 def insert_movement_profile_chart(cursora,new_sheetb,firstname,lastname,start_row):
     query = "SELECT inducedvertbreak AS Vert, horzbreak AS Horz, pitch_type "
     query += "FROM trackman_pitching_data_t WHERE pfname = %s and plname=%s"
-    print(firstname)
     
     cursora.execute(query,(firstname,lastname))
     data=cursora.fetchall()
     
     # Create a scatter plot using matplotlib
     plt.figure(figsize=(8, 6))
+    plt.title("Movement Profiles")
+    plt.xlabel("Horizontal Break")
+    plt.ylabel("Induced Vertical Break")
+    plt.grid(True)
+    
+    plt.xlim(-30, 30)
+    plt.ylim(-30, 30)
+    
     # Define colors for different pitch types
     colors = {'Fastball': 'r','Four-Seam':'r', 'Curveball': 'g', 'ChangeUp': 'b', 'Slider': 'c', 'TwoSeamFastBall': 'm', 'Sinker':'y','Cutter':'#FFA500'}
 
     scatter_objs = []
-    labels = []
 
     for pitch_type, color in colors.items():
     # Filter data for current pitch type
@@ -1069,16 +1080,15 @@ def insert_movement_profile_chart(cursora,new_sheetb,firstname,lastname,start_ro
         # Extract x and y values for scatter plot
             x_values = [row[1] for row in filtered_data]
             y_values = [row[0] for row in filtered_data]
-        # Plot scatter plot for current pitch type
+            # Plot scatter plot for current pitch type
             scatter_obj = plt.scatter(x_values, y_values, color=color, label=pitch_type)
             scatter_objs.append(scatter_obj)
-            labels.append(pitch_type)
-            
-            
-    plt.title("Movement Profiles")
-    plt.xlabel("Horizontal Break")
-    plt.ylabel("Induced Vertical Break")
-    plt.grid(True)
+        
+    if len(data)!=0:
+        plt.legend(loc='lower right')
+        
+    plt.axhline(0, color='k', linewidth=1.5)  # y=0 line
+    plt.axvline(0, color='k', linewidth=1.5)  # x=0 line
 
     # Save the plot to a BytesIO object
     buffer = io.BytesIO()
@@ -1088,6 +1098,116 @@ def insert_movement_profile_chart(cursora,new_sheetb,firstname,lastname,start_ro
     # Insert the image into the Excel file
     img = Image(buffer)
     new_sheetb.add_image(img, "F{}".format(start_row))
+    
+def insert_avg_pitch_velo_over_time(cursora,new_sheetb,firstname,lastname,start_row):
+    FFquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='FF' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    CBquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='CB' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    SLquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='SL' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    CHquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='CH' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    SPquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='SP' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    FTquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='FT' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    CTquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='CT' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    
+    cursora.execute(FFquery,(firstname,lastname))
+    FFdata=cursora.fetchall()
+    cursora.execute(CBquery,(firstname,lastname))
+    CBdata=cursora.fetchall()
+    cursora.execute(SLquery,(firstname,lastname))
+    SLdata=cursora.fetchall()
+    cursora.execute(CHquery,(firstname,lastname))
+    CHdata=cursora.fetchall()
+    cursora.execute(SPquery,(firstname,lastname))
+    SPdata=cursora.fetchall()
+    cursora.execute(FTquery,(firstname,lastname))
+    FTdata=cursora.fetchall()
+    cursora.execute(CTquery,(firstname,lastname))
+    CTdata=cursora.fetchall()
+    
+    new_sheetb.cell(row=start_row,column=13,value="FF Time")
+    new_sheetb.cell(row=start_row,column=14,value="FF Velo")
+    new_sheetb.cell(row=start_row,column=15,value="CB Time")
+    new_sheetb.cell(row=start_row,column=16,value="CB Velo")
+    new_sheetb.cell(row=start_row,column=17,value="SL Time")
+    new_sheetb.cell(row=start_row,column=18,value="SL Velo")
+    new_sheetb.cell(row=start_row,column=19,value="CH Time")
+    new_sheetb.cell(row=start_row,column=20,value="CH Velo")
+    new_sheetb.cell(row=start_row,column=21,value="SP Time")
+    new_sheetb.cell(row=start_row,column=22,value="SP Velo")
+    new_sheetb.cell(row=start_row,column=23,value="FT Time")
+    new_sheetb.cell(row=start_row,column=24,value="FT Velo")
+    new_sheetb.cell(row=start_row,column=25,value="CT Time")
+    new_sheetb.cell(row=start_row,column=26,value="CT Velo")
+    
+    for k,(time,average) in enumerate(FFdata, start_row+1):
+        new_sheetb.cell(row=k,column=13,value=time)
+        new_sheetb.cell(row=k,column=14,value=average)
+    for k,(time,average) in enumerate(CBdata, start_row+1):
+        new_sheetb.cell(row=k,column=15,value=time)
+        new_sheetb.cell(row=k,column=16,value=average)
+    for k,(time,average) in enumerate(SLdata, start_row+1):
+        new_sheetb.cell(row=k,column=17,value=time)
+        new_sheetb.cell(row=k,column=18,value=average)
+    for k,(time,average) in enumerate(CHdata, start_row+1):
+        new_sheetb.cell(row=k,column=19,value=time)
+        new_sheetb.cell(row=k,column=20,value=average)
+    for k,(time,average) in enumerate(SPdata, start_row+1):
+        new_sheetb.cell(row=k,column=21,value=time)
+        new_sheetb.cell(row=k,column=22,value=average)
+    for k,(time,average) in enumerate(FTdata, start_row+1):
+        new_sheetb.cell(row=k,column=23,value=time)
+        new_sheetb.cell(row=k,column=24,value=average)
+    for k,(time,average) in enumerate(CTdata, start_row+1):
+        new_sheetb.cell(row=k,column=25,value=time)
+        new_sheetb.cell(row=k,column=26,value=average)
+        
+    chart = ScatterChart()
+    chart.title = "Average Pitch Velocity Over Time"
+    chart.x_axis.title = "Date"
+    chart.y_axis.title = "Velocity (mph)"
+    
+    query = "SELECT MAX(velocity),MIN(velocity) as AVG FROM pitch_log_T WHERE fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    cursora.execute(query,(firstname,lastname))
+    data=cursora.fetchone()
+    
+    chart.y_axis.scaling.min = data[0]  # Set minimum value for y-axis
+    chart.y_axis.scaling.max = data[1]  # Set maximum value for y-axis
+
+    xvalues1 = Reference(new_sheetb, min_col=13, min_row=start_row+1, max_row=start_row+len(FFdata))
+    yvalues1 = Reference(new_sheetb, min_col=14, min_row=start_row+1, max_row=start_row+len(FFdata))
+    xvalues2 = Reference(new_sheetb, min_col=15,min_row=start_row+1, max_row=start_row+len(CBdata))
+    yvalues2 = Reference(new_sheetb, min_col=16,min_row=start_row+1, max_row=start_row+len(CBdata))
+    xvalues3 = Reference(new_sheetb, min_col=17, min_row=start_row+1, max_row=start_row+len(SLdata))
+    yvalues3 = Reference(new_sheetb, min_col=18, min_row=start_row+1, max_row=start_row+len(SLdata))
+    xvalues4 = Reference(new_sheetb, min_col=19,min_row=start_row+1, max_row=start_row+len(CHdata))
+    yvalues4 = Reference(new_sheetb, min_col=20,min_row=start_row+1, max_row=start_row+len(CHdata))
+    xvalues5 = Reference(new_sheetb, min_col=21, min_row=start_row+1, max_row=start_row+len(SPdata))
+    yvalues5 = Reference(new_sheetb, min_col=22, min_row=start_row+1, max_row=start_row+len(SPdata))
+    xvalues6 = Reference(new_sheetb, min_col=23,min_row=start_row+1, max_row=start_row+len(FTdata))
+    yvalues6 = Reference(new_sheetb, min_col=24,min_row=start_row+1, max_row=start_row+len(FTdata))
+    xvalues7 = Reference(new_sheetb, min_col=25, min_row=start_row+1, max_row=start_row+len(CTdata))
+    yvalues7 = Reference(new_sheetb, min_col=26, min_row=start_row+1, max_row=start_row+len(CTdata))
+    
+    
+    
+    series1 = Series(yvalues1, xvalues1, title="FF")
+    series2 = Series(yvalues2, xvalues2, title="CB")
+    series3 = Series(yvalues3, xvalues3, title="SL")
+    series4 = Series(yvalues4, xvalues4, title="CH")
+    series5 = Series(yvalues5, xvalues5, title="SP")
+    series6 = Series(yvalues6, xvalues6, title="FT")
+    series7 = Series(yvalues7, xvalues7, title="CT")
+    
+    chart.series.append(series1)
+    chart.series.append(series2)
+    chart.series.append(series3)
+    chart.series.append(series4)
+    chart.series.append(series5)
+    chart.series.append(series6)
+    chart.series.append(series7)
+
+    new_sheetb.add_chart(chart, "M{}".format(start_row))   
+    
+   
     
     
 def up_pitchers_log(cursor,update_date,file_name):
@@ -1163,7 +1283,7 @@ def up_pitchers_log(cursor,update_date,file_name):
                        
                        insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, j, 12, exea, .4)
                        
-                       insert_WHIP(cursor, new_sheet, iplEndStatement, j, 13, exea, False, 0)
+                       insert_WHIP(cursor, new_sheet, iplEndStatement, j, 13, exea, False,False, 0)
                        
                        insert_OBP(cursor, new_sheet, iplEndStatement, j, 14, exea)
                        
@@ -1246,7 +1366,7 @@ def up_pitchers_log(cursor,update_date,file_name):
                    
                    insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 12, exea, .4)
                    
-                   insert_WHIP(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, False, total_innings)
+                   insert_WHIP(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, False,False, total_innings)
                    
                    insert_OBP(cursor, new_sheet, iplEndStatement, season_totals_row, 14, exea)
                    
@@ -1290,9 +1410,11 @@ def up_pitchers_log(cursor,update_date,file_name):
                    
                    insert_whip_by_inning_of_work(cursor, new_sheet, firstname, lastname, season_totals_row+4)
                    
-                   insert_avg_peak_velo_over_time_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
+                   insert_avg_peak_FB_velo_over_time_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
                    
                    insert_movement_profile_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
+                   
+                   insert_avg_pitch_velo_over_time(cursor, new_sheet, firstname, lastname, season_totals_row+6)
                    
                    adjust_formating(new_sheet, season_totals_row)
                    
@@ -1381,7 +1503,7 @@ def up_pitchers_log(cursor,update_date,file_name):
                            
                            insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, j, 12, exea, .4)
                            
-                           insert_WHIP(cursor, new_sheet, iplEndStatement, j, 13, exea, False, 0)
+                           insert_WHIP(cursor, new_sheet, iplEndStatement, j, 13, exea, False,False, 0)
                            
                            insert_OBP(cursor, new_sheet, iplEndStatement, j, 14, exea)
                            
@@ -1464,7 +1586,7 @@ def up_pitchers_log(cursor,update_date,file_name):
                        
                        insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 12, exea, .4)
                        
-                       insert_WHIP(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, False, total_innings)
+                       insert_WHIP(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, False,False, total_innings)
                        
                        insert_OBP(cursor, new_sheet, iplEndStatement, season_totals_row, 14, exea)
                        
@@ -1508,9 +1630,11 @@ def up_pitchers_log(cursor,update_date,file_name):
                        
                        insert_whip_by_inning_of_work(cursor, new_sheet, firstname, lastname, season_totals_row+4)
                        
-                       insert_avg_peak_velo_over_time_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
+                       insert_avg_peak_FB_velo_over_time_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
                        
                        insert_movement_profile_chart(cursor, new_sheet, firstname, lastname, season_totals_row+6)
+                       
+                       insert_avg_pitch_velo_over_time(cursor, new_sheet, firstname, lastname, season_totals_row+6)
                        
                        adjust_formating(new_sheet, season_totals_row)
                   
@@ -1582,7 +1706,7 @@ def wipe_and_up_pitchers_log(cursor,update_date,file_name):
                    
                    insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, j, 12, exea, .4)
                    
-                   insert_WHIP(cursor, new_sheet, iplEndStatement, j, 13, exea, False, 0)
+                   insert_WHIP(cursor, new_sheet, iplEndStatement, j, 13, exea, False,False, 0)
                    
                    insert_OBP(cursor, new_sheet, iplEndStatement, j, 14, exea)
                    
@@ -1665,7 +1789,7 @@ def wipe_and_up_pitchers_log(cursor,update_date,file_name):
                
                insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, season_totals_row, 12, exea, .4)
                
-               insert_WHIP(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, False, total_innings)
+               insert_WHIP(cursor, new_sheet, iplEndStatement, season_totals_row, 13, exea, False,False, total_innings)
               
                insert_OBP(cursor, new_sheet, iplEndStatement, season_totals_row, 14, exea)
               
@@ -1709,9 +1833,11 @@ def wipe_and_up_pitchers_log(cursor,update_date,file_name):
                
                insert_whip_by_inning_of_work(cursor, new_sheet, fname, lname, season_totals_row+4)
                
-               insert_avg_peak_velo_over_time_chart(cursor, new_sheet, fname, lname, season_totals_row+6)
+               insert_avg_peak_FB_velo_over_time_chart(cursor, new_sheet, fname, lname, season_totals_row+6)
                
                insert_movement_profile_chart(cursor, new_sheet, fname, lname, season_totals_row+6)
+               
+               insert_avg_pitch_velo_over_time(cursor, new_sheet, fname, lname, season_totals_row+6)
                
                adjust_formating(new_sheet, season_totals_row)
           
@@ -1766,7 +1892,7 @@ def up_season_log(cursor,date,file_name):
            
            insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, 0, 11, exea, .4)
            
-           insert_WHIP(cursor, new_sheet, iplEndStatement, 0, 12, exea, True, 0)
+           insert_WHIP(cursor, new_sheet, iplEndStatement, 0, 12, exea, True,False, 0)
            
            insert_OBP(cursor, new_sheet, iplEndStatement, 0, 13, exea)
            
@@ -1850,7 +1976,7 @@ def up_season_log(cursor,date,file_name):
            
            insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 11, exea, .4)
            
-           insert_WHIP(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, True, total_innings)
+           insert_WHIP(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, True,True, total_innings)
            
            insert_OBP(cursor, new_sheet, iplEndStatement, team_totals_row, 13, exea)
            
@@ -1956,7 +2082,7 @@ def up_game_log(cursor,updated_date,file_name):
                 
                 insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, 0, 11, exea, .4)
                 
-                insert_WHIP(cursor, new_sheet, iplEndStatement, 0, 12, exea, False, 0)
+                insert_WHIP(cursor, new_sheet, iplEndStatement, 0, 12, exea, False,False, 0)
                 
                 insert_OBP(cursor, new_sheet, iplEndStatement, 0, 13, exea)
                 
@@ -2037,7 +2163,7 @@ def up_game_log(cursor,updated_date,file_name):
                 
                 insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 11, exea, .4)
                 
-                insert_WHIP(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, False, total_innings)
+                insert_WHIP(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, False,False, total_innings)
                 
                 insert_OBP(cursor, new_sheet, iplEndStatement, team_totals_row, 13, exea)
                 
@@ -2138,7 +2264,7 @@ def wipe_and_up_game_log(cursor,updated_date,file_name):
                 
                 insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, 0, 11, exea, .4)
                 
-                insert_WHIP(cursor, new_sheet, iplEndStatement, 0, 12, exea, False, 0)
+                insert_WHIP(cursor, new_sheet, iplEndStatement, 0, 12, exea, False,False, 0)
                 
                 insert_OBP(cursor, new_sheet, iplEndStatement, 0, 13, exea)
                 
@@ -2219,7 +2345,7 @@ def wipe_and_up_game_log(cursor,updated_date,file_name):
                 
                 insert_opponent_slugging_percentage(cursor, new_sheet, iplEndStatement, team_totals_row, 11, exea, .4)
                 
-                insert_WHIP(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, False, total_innings)
+                insert_WHIP(cursor, new_sheet, iplEndStatement, team_totals_row, 12, exea, False,False, total_innings)
                 
                 insert_OBP(cursor, new_sheet, iplEndStatement, team_totals_row, 13, exea)
                 
