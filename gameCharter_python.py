@@ -104,6 +104,8 @@ def main():
                             outs_accrued+=(outs-prevOuts)
                             if outs >= 3:
                                 outs = 0
+                                balls = 0
+                                strikes = 0
                                 inning += 1
                                 batter_in_inning = 1
                         elif change.lower() == "count":

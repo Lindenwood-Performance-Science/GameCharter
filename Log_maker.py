@@ -80,6 +80,8 @@ def setup(sheetnameb,workbookb,A1title,B1entry,D1title,E1entry,G1title,H1entry,p
     for l in range(0,len(head)):
         insert_header(pos[l],head[l],new_sheetc)
         
+    new_sheetc['AC1']="FF-CB-SL-CH-SP-FT-CT"
+        
     return new_sheetc
 
 def bold_first_column_if_threshold(sheet, threshold):
@@ -1035,7 +1037,7 @@ def insert_avg_peak_FB_velo_over_time_chart(cursora,new_sheetb,firstname,lastnam
         
         
     chart = ScatterChart()
-    chart.title = "Velocity Peaks and Averages Over Time"
+    chart.title = "Fastball Velocity Peaks and Averages Over Time"
     chart.x_axis.title = "Date"
     chart.y_axis.title = "Velocity (mph)"
 
@@ -1099,115 +1101,50 @@ def insert_movement_profile_chart(cursora,new_sheetb,firstname,lastname,start_ro
     img = Image(buffer)
     new_sheetb.add_image(img, "F{}".format(start_row))
     
-def insert_avg_pitch_velo_over_time(cursora,new_sheetb,firstname,lastname,start_row):
-    FFquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='FF' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
-    CBquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='CB' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
-    SLquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='SL' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
-    CHquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='CH' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
-    SPquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='SP' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
-    FTquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='FT' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
-    CTquery = "SELECT date_n AS time,AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type='CT' and fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
+    plt.close()
+
     
-    cursora.execute(FFquery,(firstname,lastname))
-    FFdata=cursora.fetchall()
-    cursora.execute(CBquery,(firstname,lastname))
-    CBdata=cursora.fetchall()
-    cursora.execute(SLquery,(firstname,lastname))
-    SLdata=cursora.fetchall()
-    cursora.execute(CHquery,(firstname,lastname))
-    CHdata=cursora.fetchall()
-    cursora.execute(SPquery,(firstname,lastname))
-    SPdata=cursora.fetchall()
-    cursora.execute(FTquery,(firstname,lastname))
-    FTdata=cursora.fetchall()
-    cursora.execute(CTquery,(firstname,lastname))
-    CTdata=cursora.fetchall()
-    
-    new_sheetb.cell(row=start_row,column=13,value="FF Time")
-    new_sheetb.cell(row=start_row,column=14,value="FF Velo")
-    new_sheetb.cell(row=start_row,column=15,value="CB Time")
-    new_sheetb.cell(row=start_row,column=16,value="CB Velo")
-    new_sheetb.cell(row=start_row,column=17,value="SL Time")
-    new_sheetb.cell(row=start_row,column=18,value="SL Velo")
-    new_sheetb.cell(row=start_row,column=19,value="CH Time")
-    new_sheetb.cell(row=start_row,column=20,value="CH Velo")
-    new_sheetb.cell(row=start_row,column=21,value="SP Time")
-    new_sheetb.cell(row=start_row,column=22,value="SP Velo")
-    new_sheetb.cell(row=start_row,column=23,value="FT Time")
-    new_sheetb.cell(row=start_row,column=24,value="FT Velo")
-    new_sheetb.cell(row=start_row,column=25,value="CT Time")
-    new_sheetb.cell(row=start_row,column=26,value="CT Velo")
-    
-    for k,(time,average) in enumerate(FFdata, start_row+1):
-        new_sheetb.cell(row=k,column=13,value=time)
-        new_sheetb.cell(row=k,column=14,value=average)
-    for k,(time,average) in enumerate(CBdata, start_row+1):
-        new_sheetb.cell(row=k,column=15,value=time)
-        new_sheetb.cell(row=k,column=16,value=average)
-    for k,(time,average) in enumerate(SLdata, start_row+1):
-        new_sheetb.cell(row=k,column=17,value=time)
-        new_sheetb.cell(row=k,column=18,value=average)
-    for k,(time,average) in enumerate(CHdata, start_row+1):
-        new_sheetb.cell(row=k,column=19,value=time)
-        new_sheetb.cell(row=k,column=20,value=average)
-    for k,(time,average) in enumerate(SPdata, start_row+1):
-        new_sheetb.cell(row=k,column=21,value=time)
-        new_sheetb.cell(row=k,column=22,value=average)
-    for k,(time,average) in enumerate(FTdata, start_row+1):
-        new_sheetb.cell(row=k,column=23,value=time)
-        new_sheetb.cell(row=k,column=24,value=average)
-    for k,(time,average) in enumerate(CTdata, start_row+1):
-        new_sheetb.cell(row=k,column=25,value=time)
-        new_sheetb.cell(row=k,column=26,value=average)
-        
+def insert_avg_pitch_velo_over_time(cursor, new_sheet, firstname, lastname, start_row):
+    pitch_types = ['FF', 'CB', 'SL', 'CH', 'SP', 'FT', 'CT']
     chart = ScatterChart()
     chart.title = "Average Pitch Velocity Over Time"
     chart.x_axis.title = "Date"
     chart.y_axis.title = "Velocity (mph)"
     
-    query = "SELECT MAX(velocity),MIN(velocity) as AVG FROM pitch_log_T WHERE fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n "
-    cursora.execute(query,(firstname,lastname))
-    data=cursora.fetchone()
+    # Starting column index
+    col_index = 13
     
-    chart.y_axis.scaling.min = data[0]  # Set minimum value for y-axis
-    chart.y_axis.scaling.max = data[1]  # Set maximum value for y-axis
-
-    xvalues1 = Reference(new_sheetb, min_col=13, min_row=start_row+1, max_row=start_row+len(FFdata))
-    yvalues1 = Reference(new_sheetb, min_col=14, min_row=start_row+1, max_row=start_row+len(FFdata))
-    xvalues2 = Reference(new_sheetb, min_col=15,min_row=start_row+1, max_row=start_row+len(CBdata))
-    yvalues2 = Reference(new_sheetb, min_col=16,min_row=start_row+1, max_row=start_row+len(CBdata))
-    xvalues3 = Reference(new_sheetb, min_col=17, min_row=start_row+1, max_row=start_row+len(SLdata))
-    yvalues3 = Reference(new_sheetb, min_col=18, min_row=start_row+1, max_row=start_row+len(SLdata))
-    xvalues4 = Reference(new_sheetb, min_col=19,min_row=start_row+1, max_row=start_row+len(CHdata))
-    yvalues4 = Reference(new_sheetb, min_col=20,min_row=start_row+1, max_row=start_row+len(CHdata))
-    xvalues5 = Reference(new_sheetb, min_col=21, min_row=start_row+1, max_row=start_row+len(SPdata))
-    yvalues5 = Reference(new_sheetb, min_col=22, min_row=start_row+1, max_row=start_row+len(SPdata))
-    xvalues6 = Reference(new_sheetb, min_col=23,min_row=start_row+1, max_row=start_row+len(FTdata))
-    yvalues6 = Reference(new_sheetb, min_col=24,min_row=start_row+1, max_row=start_row+len(FTdata))
-    xvalues7 = Reference(new_sheetb, min_col=25, min_row=start_row+1, max_row=start_row+len(CTdata))
-    yvalues7 = Reference(new_sheetb, min_col=26, min_row=start_row+1, max_row=start_row+len(CTdata))
+    for pitch_type in pitch_types:
+        query = "SELECT date_n AS time, AVG(velocity) as AVG FROM pitch_log_T WHERE pitch_type=%s AND fname=%s AND lname=%s AND pitch_count>0 GROUP BY date_n"
+        cursor.execute(query, (pitch_type, firstname, lastname))
+        data = cursor.fetchall()
+        
+        # Insert data into spreadsheet
+        new_sheet.cell(row=start_row, column=col_index, value=f"{pitch_type} Time")
+        new_sheet.cell(row=start_row, column=col_index + 1, value=f"{pitch_type} Velo")
+        
+        for k, (time, average) in enumerate(data, start=start_row+1):
+            new_sheet.cell(row=k, column=col_index, value=time)
+            new_sheet.cell(row=k, column=col_index + 1, value=average)
+        
+        # Add data to chart
+        if (len(data)!=0):
+            x_values = Reference(new_sheet, min_col=col_index, min_row=start_row+1, max_row=start_row+len(data))
+            y_values = Reference(new_sheet, min_col=col_index + 1, min_row=start_row+1, max_row=start_row+len(data))
+            series = Series(y_values, x_values, title=pitch_type)
+            chart.series.append(series)
+        
+        # Increment column index for the next pitch type
+        col_index += 2
+        
+    query = "SELECT MIN(velocity),MAX(velocity) FROM pitch_log_T WHERE fname=%s AND lname=%s AND pitch_count>0"
+    cursor.execute(query,(firstname,lastname))
+    data=cursor.fetchone()
     
+    chart.y_axis.scaling.min = data[0]-2  # Set minimum value for y-axis
+    chart.y_axis.scaling.max = data[1]+2  # Set maximum value for y-axis
     
-    
-    series1 = Series(yvalues1, xvalues1, title="FF")
-    series2 = Series(yvalues2, xvalues2, title="CB")
-    series3 = Series(yvalues3, xvalues3, title="SL")
-    series4 = Series(yvalues4, xvalues4, title="CH")
-    series5 = Series(yvalues5, xvalues5, title="SP")
-    series6 = Series(yvalues6, xvalues6, title="FT")
-    series7 = Series(yvalues7, xvalues7, title="CT")
-    
-    chart.series.append(series1)
-    chart.series.append(series2)
-    chart.series.append(series3)
-    chart.series.append(series4)
-    chart.series.append(series5)
-    chart.series.append(series6)
-    chart.series.append(series7)
-
-    new_sheetb.add_chart(chart, "M{}".format(start_row))   
-    
-   
+    new_sheet.add_chart(chart, "M{}".format(start_row))
     
     
 def up_pitchers_log(cursor,update_date,file_name):

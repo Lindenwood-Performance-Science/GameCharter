@@ -113,6 +113,8 @@ def main():
                             outs_accrued[counter%2]+=(outs-prevOuts)
                             if outs >= 3:
                                 outs = 0
+                                balls = 0
+                                strikes = 0
                                 inning[counter%2] += 1
                                 batter_in_inning = 1
                                 counter+=1
